@@ -57,7 +57,8 @@ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;pad
 .panel>h2.hdr-strong{font-size:18px;color:var(--ink);text-transform:none;letter-spacing:normal;font-weight:700}
 .gt-card{background:var(--gt-bg);border-color:var(--gt-line)}
 .ddx-card{background:var(--ddx-bg);border-color:var(--ddx-line)}
-.gt{padding:14px 16px;border-bottom:1px solid var(--line)}
+.gt{padding:12px 16px}
+.gt .gtlab{color:var(--good);font-weight:800;margin-right:2px}
 .gt .dx{font-size:17px;font-weight:650;margin-top:2px}
 .gt .icd{font-weight:400;color:var(--muted);font-size:14px}
 .gt .tag{display:inline-block;font-size:11.5px;padding:1px 8px;border:1px solid var(--line);border-radius:99px;color:var(--muted);margin-left:8px;vertical-align:middle}
@@ -267,12 +268,10 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   </section>
   <div class="col-right">
     <section class="panel gt-card pin" id="gtCard">
-      <h2 id="gtTitle" class="hdr-strong">Ground truth</h2>
       <div class="gt" id="gt"></div>
     </section>
     <section class="panel ddx-card">
       <div class="stepbar"><button class="step" id="stepA" data-step="1"></button><button class="step" id="stepB" data-step="2"></button><button class="step" id="stepC" data-step="3"></button></div>
-      <h2 id="ddxTitle" class="hdr-strong">The AI’s ranked differential</h2>
       <div id="ddxGroups"></div>
       <div id="qs"></div>
     </section>
@@ -436,7 +435,7 @@ function curStep(c){const r=rec(c);if(r.step)return r.step;if(!step1Done(c))retu
 function rows(){const c=CASES[ci];if(STEP===1)return uniq(c).map(u=>({k:mkey(u.k),u}));if(STEP===2)return uniq(c).map(u=>({k:hkey(u.k),u}));return [{k:'fit'}];}
 const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 function renderRecord(){const c=CASES[ci];
- $('gt').innerHTML=`<div class="dx">${esc(L(c,'gt'))} <span class="icd">[${esc(c.icd)}]</span><span class="tag">${esc(t('gtType')[c.gt_type]||c.gt_type)}</span></div>`;
+ $('gt').innerHTML=`<div class="dx"><span class="gtlab">GT:</span> ${esc(L(c,'gt'))} <span class="icd">[${esc(c.icd)}]</span><span class="tag">${esc(t('gtType')[c.gt_type]||c.gt_type)}</span></div>`;
  const locked=STEP===1;$('locked').hidden=!locked;$('doc').hidden=locked;document.querySelector('.tabs').hidden=locked;$('gtCard').hidden=(STEP===2);
  $('lockedTitle').textContent=t('lockedTitle');$('lockedSub').textContent=t('lockedSub');
  if(locked)return;
@@ -480,7 +479,7 @@ function setStep(n){const c=CASES[ci],r=Object.assign({},rec(c));r.step=n;state.
  render();window.scrollTo(0,0);resetCols();}
 function renderStaticUI(){document.title=t('title');$('mainTitle').textContent=t('title');$('prev').textContent=t('prev');$('next').textContent=t('next');$('gotoLabel').textContent=t('goto');
  $('firstTodo').textContent=t('firstUnfinished');$('helpBtn').textContent=t('help');$('savefile').textContent=t('saveProgress');$('loadBtn').textContent=t('loadProgress');$('export').textContent=t('export');
- $('langEn').setAttribute('aria-pressed',LANG==='en');$('langZh').setAttribute('aria-pressed',LANG==='zh');$('caseTitle').textContent=t('theCase');$('gtTitle').textContent=t('gtLabel');$('ddxTitle').textContent=t('ddxTitle');
+ $('langEn').setAttribute('aria-pressed',LANG==='en');$('langZh').setAttribute('aria-pressed',LANG==='zh');$('caseTitle').textContent=t('theCase');
  document.querySelector('.tabs button[data-tab=note]').textContent=t('noteTab');document.querySelector('.tabs button[data-tab=persona]').textContent=t('personaTab');document.querySelector('.tabs button[data-tab=transcript]').textContent=t('transcriptTab');
  ['helpTitle','help1','help2','help3a','help3b','help3d','help4','help5','help6','gotIt'].forEach(k=>$(k).innerHTML=t(k));$('raterPill').textContent=t('raterWho')(RATER);}
 function renderLoginUI(){$('loginTitle').textContent=t('title');$('loginIntro').textContent=t('loginIntro');
