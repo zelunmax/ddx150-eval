@@ -32,10 +32,9 @@ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;pad
  .casepanel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
  .casepanel .doc{flex:1;max-height:none}
  .casepanel .locked{flex:1}
- .col-right{min-height:0;overflow:hidden;position:relative}
+ .col-right{min-height:0;overflow:hidden}
  .gt-card.pin{position:static;box-shadow:none;flex:none}
- /* DDx panel: top edge pinned at y=473px of the viewport (never above the GT card) */
- .ddx-card{position:absolute;left:0;right:0;bottom:0;top:max(calc(473px - var(--hdr-h,110px) - 12px),var(--gt-h,0px));display:flex;flex-direction:column;overflow:hidden;min-height:0}
+ .ddx-card{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
  .ddx-card>h2,.ddx-card>.stepbar,.ddx-card>#qs{flex:none}
  #ddxGroups{flex:1;min-height:0;display:flex;flex-direction:column}
  #ddxGroups>.legend,#ddxGroups>.nextstep,#ddxGroups>.backlink,#ddxGroups>.groupblock>h3{flex:none}
@@ -475,8 +474,7 @@ function renderRate(){const c=CASES[ci],r=rec(c),R=rows();if(active>=R.length)ac
  $('qs').innerHTML=STEP===3?`<input class="cmt" id="ccmt" placeholder="${esc(t('cmtPlaceholder'))}" value="${esc(r.c||'')}">`:'';
  const d=nDone();$('prog').style.width=(100*d/CASES.length)+'%';$('count').textContent=t('casesDoneText')(d,CASES.length);$('where').textContent=t('caseOf')(ci+1,CASES.length);
  const st=$('cstate');st.textContent=caseComplete(c)?t('complete'):t('incomplete');st.className='pill '+(caseComplete(c)?'done':'todo');}
-function setGtH(){const g=$('gtCard');const h=(g&&!g.hidden)?g.offsetHeight+16:0;document.documentElement.style.setProperty('--gt-h',h+'px');}
-function render(){renderRecord();renderRate();setGtH();}
+function render(){renderRecord();renderRate();}
 function setStep(n){const c=CASES[ci],r=Object.assign({},rec(c));r.step=n;state.c[c.study_id]=r;save();STEP=n;active=0;
  const R=rows();const i=R.findIndex(x=>!(rec(c)[x.k]>=1));active=i<0?0:i;
  render();window.scrollTo(0,0);resetCols();}
@@ -538,7 +536,7 @@ const RATER_RE=/^[A-Z0-9_-]{1,16}$/;
 function doLogin(){const el=$('rc'),code=el.value.trim().toUpperCase();el.value=code;if(!RATER_RE.test(code)){$('loginMsg').textContent=t('errCodeFormat');$('loginMsg').className='msg err';el.focus();return;}try{boot(code);}catch(e){$('loginMsg').textContent='Error: '+(e&&e.message||e);$('loginMsg').className='msg err';console.error(e);}}
 function boot(code){RATER=code;KEY='ddx150:'+PACK+':'+RATER;state=load();BOOTED=true;try{localStorage.setItem('ddx150:lastRater',code);}catch(e){}
  $('login').hidden=true;$('app').hidden=false;renderStaticUI();let start=0;try{start=+localStorage.getItem(KEY+':ci')||0;}catch(e){}go(Math.min(start,CASES.length-1));
- const setH=()=>{const h=$('stickyTop').getBoundingClientRect().height;document.documentElement.style.setProperty('--sticky-h',(h+149)+'px');document.documentElement.style.setProperty('--hdr-h',h+'px');};requestAnimationFrame(setH);window.addEventListener('resize',()=>{setH();setGtH();});if(window.ResizeObserver){new ResizeObserver(setH).observe($('stickyTop'));}}
+ const setH=()=>{const h=$('stickyTop').getBoundingClientRect().height;document.documentElement.style.setProperty('--sticky-h',(h+149)+'px');document.documentElement.style.setProperty('--hdr-h',h+'px');};requestAnimationFrame(setH);window.addEventListener('resize',setH);if(window.ResizeObserver){new ResizeObserver(setH).observe($('stickyTop'));}}
 $('loginBtn').onclick=doLogin;$('rc').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();doLogin();}});
 try{const l=localStorage.getItem('ddx150:lang');if(l==='zh')LANG='zh';const last=localStorage.getItem('ddx150:lastRater');if(last)$('rc').value=last;}catch(e){}
 renderLoginUI();$('rc').focus();
