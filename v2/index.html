@@ -61,9 +61,9 @@ ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-le
 .legend .lg .n{display:inline-block;font-weight:700;color:var(--accent);margin-right:4px;font-size:13px}
 .legend .lg .nm{font-weight:650;color:var(--ink)}
 .items{padding:6px 12px 4px}
-.ihead{display:grid;grid-template-columns:28px minmax(0,1fr) repeat(5,48px) 132px;gap:4px 6px;align-items:end;padding:2px 6px 4px;font-size:11px;color:var(--muted);text-align:center;line-height:1.2}
+.ihead{display:grid;grid-template-columns:28px minmax(0,1fr) repeat(5,48px) 150px;gap:4px 6px;align-items:end;padding:2px 6px 4px;font-size:11px;color:var(--muted);text-align:center;line-height:1.2}
 .ihead span:nth-child(-n+2){text-align:left}
-.item{display:grid;grid-template-columns:28px minmax(0,1fr) repeat(5,48px) 132px;gap:4px 6px;align-items:center;padding:8px 6px;border-radius:9px;margin:2px 0}
+.item{display:grid;grid-template-columns:28px minmax(0,1fr) repeat(5,48px) 150px;gap:4px 6px;align-items:center;padding:8px 6px;border-radius:9px;margin:2px 0}
 .item.active{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
 .item.rated:not(.active){opacity:.92}
 .item .rk{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center}
@@ -75,7 +75,7 @@ ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-le
 .ihead .ah{border-left:1px solid var(--line);padding-left:6px}
 .item .ap{display:flex;gap:4px;justify-content:center;align-items:center;min-height:36px;border-left:1px solid var(--line);padding-left:6px}
 .item .ap .na{color:var(--muted);font-size:12px}
-.item .ap button{min-width:0;padding:0 8px;height:36px;font-size:13px;border-radius:8px;white-space:nowrap}
+.item .ap button{flex:1 1 0;min-width:0;padding:0 6px;height:36px;font-size:13px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .item .ap button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:650}
 .item .ap button.no[aria-pressed=true]{background:var(--err);border-color:var(--err)}
 .item.ask .ap button{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
@@ -84,7 +84,7 @@ ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-le
 .exbox .exap{font-size:12.5px;padding:0 9px;height:28px;display:flex;align-items:center;border-radius:7px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .exbox .exap.y{background:var(--accent);border-color:var(--accent);color:#fff}
 .exbox .exap.n{background:var(--err);border-color:var(--err);color:#fff}
-@media(max-width:700px){.ihead,.item{grid-template-columns:22px minmax(0,1fr) repeat(5,34px) 96px}.item button.sc{width:34px;height:32px}.item .ap button{padding:0 5px;font-size:12px}}
+@media(max-width:700px){.ihead,.item{grid-template-columns:22px minmax(0,1fr) repeat(5,34px) 110px}.item button.sc{width:34px;height:32px}.item .ap button{padding:0 4px;font-size:12px}}
 .groupblock .ddx{border-bottom:0}
 .groupblock h3{margin:0;padding:10px 16px 0;font-size:12.5px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 .gpick,.ranks{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
@@ -257,7 +257,7 @@ const UI = {
   apQ:'How <b>APPROPRIATE</b> was the DDx?',apSub:'Compared with the differential you would expect for this presentation.',
   coQ:'How <b>COMPREHENSIVE</b> was the DDx?',coSub:'Compared with the differential you would expect for this presentation.',
   cmtPlaceholder:'comment on this case (optional)',groupTitle:['Group 1','Group 2','Group 3'],
-  groupQ:'',none:'',title:'Protégé 150 DDx Rating',legendTitle:'For every candidate, rate how close it is to the ground truth:',legendSub:'Candidates scored 1–3 get one follow-up: is this diagnosis a <b>reasonable</b> consideration for this HPI? (4–5 are reasonable by definition.)',colHead:['Unrelated','Somewhat related','Related','Very close','Exact / same'],apHead:'Reasonable for this HPI?',apYes:'Reasonable',apNo:'Not reasonable',apNA:'—',
+  groupQ:'',none:'',title:'Protégé 150 DDx Rating',legendTitle:'For every candidate, rate how close it is to the ground truth:',legendSub:'Candidates scored 1–3 get one follow-up: is this diagnosis a <b>reasonable</b> consideration for this HPI? (4–5 are reasonable by definition.)',colHead:['Unrelated','Somewhat related','Related','Very close','Exact / same'],apHead:'Reasonable for this HPI?',apYes:'✓ Yes',apNo:'✗ No',apNA:'—',
   helpTitle:'How to use this',
   help1:'Three different AI systems each interviewed the same simulated patient and produced a ranked differential. The right-hand panel shows the <b>top 3</b> from each system as Group 1, 2 and 3. Which system is which group is randomised per case and known only to the study lead — do not try to guess it.',
   help2:'Every candidate diagnosis (9 per case) gets one score from <b>1 to 5</b>: how close is it to the ground truth? If you give 1, 2 or 3, the same row asks one more thing: is this diagnosis a <b>reasonable</b> consideration for this HPI (<kbd>y</kbd> yes / <kbd>x</kbd> no)? Scores of 4–5 skip that. The highlight moves down by itself; a case is complete when every row is answered.',
@@ -293,7 +293,7 @@ const UI = {
   rankSub:'符合你剛剛所選程度中，排名最高的項目。按鍵 <kbd>1</kbd>–<kbd>9</kbd>，<kbd>0</kbd> 代表第 10 名。',cantSay:'無法判斷',
   apQ:'這份 DDx 有多<b>適當</b>？',apSub:'與你預期此病例應有的鑑別診斷相比。',coQ:'這份 DDx 有多<b>完整</b>？',coSub:'與你預期此病例應有的鑑別診斷相比。',
   cmtPlaceholder:'針對此病例的備註（選填）',groupTitle:['第一組','第二組','第三組'],
-  groupQ:'',none:'',title:'Protégé 150 DDx 評分',helpTitle:'使用說明',legendTitle:'請為每一個候選診斷評分：它與 ground truth 有多接近？',legendSub:'給 1–3 分的項目會再追問一題：對這份 HPI 來說，這個診斷是<b>合理</b>的考量嗎？（4–5 分視為當然合理。）',colHead:['無關','略有相關','相關','非常接近','完全符合'],apHead:'對 HPI 合理？',apYes:'合理',apNo:'不合理',apNA:'—',
+  groupQ:'',none:'',title:'Protégé 150 DDx 評分',helpTitle:'使用說明',legendTitle:'請為每一個候選診斷評分：它與 ground truth 有多接近？',legendSub:'給 1–3 分的項目會再追問一題：對這份 HPI 來說，這個診斷是<b>合理</b>的考量嗎？（4–5 分視為當然合理。）',colHead:['無關','略有相關','相關','非常接近','完全符合'],apHead:'對 HPI 合理？',apYes:'✓ 合理',apNo:'✗ 不合理',apNA:'—',
   help1:'三個不同的 AI 系統各自問診了同一位模擬病人，並產生排序鑑別診斷。右側顯示每個系統的<b>前 3 名</b>，分別標為第一、二、三組。哪一組對應哪個系統在每個病例中隨機分配，只有計畫主持人知道——請不要嘗試猜測。',
   help2:'每個候選診斷（每例 9 個）各給一個 <b>1 到 5</b> 分：它與 ground truth 有多接近？若給 1、2 或 3 分，同一列會再追問一題：對這份 HPI 來說這個診斷<b>合理</b>嗎（<kbd>y</kbd> 合理／<kbd>x</kbd> 不合理）？4–5 分則跳過。亮框會自動往下移，每列都答完該病例才算完成。',
   help3a:'<b>5 完全符合</b>——同一個臨床診斷。<b>4 非常接近</b>——同一個臨床實體，只是講得較廣或較具體，處置基本相同。<b>3 相關</b>——器官與病程對了，但有臨床上有意義的差異（左右側、併發症、急性／慢性、不同次分型），會改變臨床判斷或檢查方向。',
