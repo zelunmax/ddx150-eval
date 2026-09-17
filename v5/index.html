@@ -24,6 +24,9 @@ button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .bar{height:6px;background:var(--line);border-radius:99px;width:180px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--good);width:0}
 main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;padding:16px;align-items:start;max-width:1900px;margin:0 auto}
+.casepanel{position:sticky;top:calc(var(--hdr-h,110px) + 12px);z-index:4}
+.gt-card.pin{position:sticky;top:calc(var(--hdr-h,110px) + 12px);z-index:6;box-shadow:0 6px 18px -10px rgba(0,0,0,.35)}
+@media(max-width:1150px){.casepanel{position:static}.gt-card.pin{position:sticky}}
 @media(max-width:1150px){main{grid-template-columns:1fr}}
 .col-right{display:flex;flex-direction:column;gap:16px;min-width:0}
 .langbar{display:flex;gap:8px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
@@ -44,7 +47,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;pad
 .tabs{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;padding:7px 11px;color:var(--muted);background:none}
 .tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-.doc{max-height:calc(100vh - var(--sticky-h,250px));overflow:auto;padding:14px 18px;font-size:14.5px;background:var(--doc-bg);border-radius:0 0 12px 12px}
+.doc{max-height:calc(100vh - var(--hdr-h,110px) - 140px);overflow:auto;padding:14px 18px;font-size:14.5px;background:var(--doc-bg);border-radius:0 0 12px 12px}
 .doc pre{white-space:pre-wrap;word-wrap:break-word;font:inherit;margin:0}
 .turn{margin:0 0 14px}
 .turn .who{font-weight:650;font-size:13px;color:var(--accent)}
@@ -232,7 +235,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
 <div class="unfinished-panel" id="unfinishedPanel" hidden><div class="unfinished-list" id="unfinishedList"></div></div>
 </div>
 <main>
-  <section class="panel">
+  <section class="panel casepanel">
     <h2 id="caseTitle">The case</h2>
     <div class="locked" id="locked"><div class="lk-ic">🔒</div><div class="lk-t" id="lockedTitle"></div><div class="lk-s" id="lockedSub"></div></div>
     <div class="tabs" role="tablist">
@@ -243,7 +246,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
     <div class="doc" id="doc"></div>
   </section>
   <div class="col-right">
-    <section class="panel gt-card">
+    <section class="panel gt-card pin" id="gtCard">
       <h2 id="gtTitle" class="hdr-strong">Ground truth</h2>
       <div class="gt" id="gt"></div>
     </section>
@@ -295,7 +298,7 @@ const UI = {
   nextStep2:'All candidates scored. Continue to step 3.',toStep3:'Continue →',backStep2:'← back to step 2 (HPI support)',
   fitQ:'Given this HPI, how fitting is the ground-truth diagnosis?',fitSub:'You have now read the case and scored every candidate. This question checks the benchmark item itself, not the AI: is the ground truth a diagnosis this history can reasonably carry?',
   fitScale:[[1,'Not fitting','The history does not support it, or points elsewhere.'],[2,'Poor fit','Compatible at best; key features absent or contradicted.'],[3,'Possible','Plausible but under-determined by this history.'],[4,'Fitting','A reasonable diagnosis for this history.'],[5,'Clearly fitting','The history clearly supports it; most clinicians would arrive here.']],
-  step2sub:'Then rate how well the HPI supports each candidate (1–5).',
+  step2sub:'Then rate how well the HPI supports each candidate (1–5). The ground truth is hidden in this step.',
   noteTab:'HPI summary',personaTab:'Patient persona',transcriptTab:'Interview transcript',gtLabel:'Ground truth',
   pQ:'How close did the AI’s differential diagnosis (DDx) come to including the <b>PROBABLE DIAGNOSIS</b> from the answer key?',
   rankQ:'Which position in the list is that diagnosis?',rankSub:'The highest-ranked item that meets the level you just chose. Keys <kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd> for 10.',cantSay:'can’t say',
@@ -342,7 +345,7 @@ const UI = {
   nextStep2:'所有候選診斷都已評分。進入第三步。',toStep3:'繼續 →',backStep2:'← 回到第二步（HPI 支持度）',
   fitQ:'根據這份 HPI，你覺得 ground truth 這個診斷適合嗎？',fitSub:'你已經讀完病例、也評完所有候選診斷。這題檢查的是題目本身，不是 AI：這份病史能合理地承載 ground truth 這個診斷嗎？',
   fitScale:[[1,'不適合','病史不支持，或指向別的診斷。'],[2,'不太適合','勉強相容；關鍵特徵缺失或矛盾。'],[3,'可能','合理但病史資訊不足以確立。'],[4,'適合','對這份病史是合理的診斷。'],[5,'非常適合','病史明確支持；多數醫師都會得到這個診斷。']],
-  step2sub:'再評 HPI 對每個候選診斷的支持程度（1–5）。',
+  step2sub:'再評 HPI 對每個候選診斷的支持程度（1–5）；這一步會隱藏 ground truth。',
   noteTab:'HPI 摘要',personaTab:'病人背景',transcriptTab:'問診紀錄',gtLabel:'Ground truth（正確診斷）',
   pQ:'AI 的鑑別診斷 (DDx) 有多接近包含答案中的<b>最可能診斷</b>？',rankQ:'那個診斷在清單中排第幾名？',
   rankSub:'符合你剛剛所選程度中，排名最高的項目。按鍵 <kbd>1</kbd>–<kbd>9</kbd>，<kbd>0</kbd> 代表第 10 名。',cantSay:'無法判斷',
@@ -405,7 +408,7 @@ function rows(){const c=CASES[ci];if(STEP===1)return uniq(c).map(u=>({k:mkey(u.k
 const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 function renderRecord(){const c=CASES[ci];
  $('gt').innerHTML=`<div class="dx">${esc(L(c,'gt'))} <span class="icd">[${esc(c.icd)}]</span><span class="tag">${esc(t('gtType')[c.gt_type]||c.gt_type)}</span></div>`;
- const locked=STEP===1;$('locked').hidden=!locked;$('doc').hidden=locked;document.querySelector('.tabs').hidden=locked;
+ const locked=STEP===1;$('locked').hidden=!locked;$('doc').hidden=locked;document.querySelector('.tabs').hidden=locked;$('gtCard').hidden=(STEP===2);
  $('lockedTitle').textContent=t('lockedTitle');$('lockedSub').textContent=t('lockedSub');
  if(locked)return;
  const tab=document.querySelector('.tabs button[aria-selected=true]').dataset.tab,doc=$('doc');
@@ -501,10 +504,10 @@ $('ioClose').onclick=()=>$('io').close();
 $('ioCopy').onclick=async()=>{const ta=$('ioText');try{await navigator.clipboard.writeText(ta.value);$('ioMsg').textContent=t('copied');$('ioMsg').className='msg done';}catch(e){ta.select();$('ioMsg').textContent=t('copyFail');$('ioMsg').className='msg err';}};
 $('ioApply').onclick=()=>{try{const s=JSON.parse($('ioText').value);if(!s.c)throw 0;if(s.pack&&s.pack!==PACK&&!confirm(t('confirmDiffPack')(s.pack,PACK)))return;state={c:s.c,m:s.m||Date.now()};save();render();$('ioMsg').textContent=t('loaded');$('ioMsg').className='msg done';}catch(e){$('ioMsg').textContent=t('badFile');$('ioMsg').className='msg err';}};
 const RATER_RE=/^[A-Z0-9_-]{1,16}$/;
-function doLogin(){const el=$('rc'),code=el.value.trim().toUpperCase();el.value=code;if(!RATER_RE.test(code)){$('loginMsg').textContent=t('errCodeFormat');$('loginMsg').className='msg err';el.focus();return;}boot(code);}
+function doLogin(){const el=$('rc'),code=el.value.trim().toUpperCase();el.value=code;if(!RATER_RE.test(code)){$('loginMsg').textContent=t('errCodeFormat');$('loginMsg').className='msg err';el.focus();return;}try{boot(code);}catch(e){$('loginMsg').textContent='Error: '+(e&&e.message||e);$('loginMsg').className='msg err';console.error(e);}}
 function boot(code){RATER=code;KEY='ddx150:'+PACK+':'+RATER;state=load();BOOTED=true;try{localStorage.setItem('ddx150:lastRater',code);}catch(e){}
  $('login').hidden=true;$('app').hidden=false;renderStaticUI();let start=0;try{start=+localStorage.getItem(KEY+':ci')||0;}catch(e){}go(Math.min(start,CASES.length-1));
- requestAnimationFrame(()=>{const h=$('stickyTop').getBoundingClientRect().height;document.documentElement.style.setProperty('--sticky-h',(h+149)+'px');});}
+ const setH=()=>{const h=$('stickyTop').getBoundingClientRect().height;document.documentElement.style.setProperty('--sticky-h',(h+149)+'px');document.documentElement.style.setProperty('--hdr-h',h+'px');};requestAnimationFrame(setH);window.addEventListener('resize',setH);}
 $('loginBtn').onclick=doLogin;$('rc').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();doLogin();}});
 try{const l=localStorage.getItem('ddx150:lang');if(l==='zh')LANG='zh';const last=localStorage.getItem('ddx150:lastRater');if(last)$('rc').value=last;}catch(e){}
 renderLoginUI();$('rc').focus();
