@@ -454,7 +454,7 @@ function matchHTML(c,r){const heads=t('colHead'),U=uniq(c),R=rows();
   return `<div class="item ${isAct?'active':''} ${val?'rated':''}" data-k="${esc(k)}"><div class="rk">${n+1}</div><div class="dxn">${esc(dx)}</div>${btns}</div>`;}).join('');
  const done=step1Done(c);
  const next=done?`<div class="nextstep"><span>${esc(t('nextStep'))}</span><button class="primary" id="openCase">${esc(t('openCase'))}</button></div>`:'';
- return legendHTML()+`<div class="groupblock"><h3>${esc(t('matchTitle'))}</h3><div class="items">${head}${list}</div></div>`+next;}
+ return legendHTML()+`<div class="groupblock"><div class="items">${head}${list}</div></div>`+next;}
 function supportHTML(c,r){const heads=t('supHead'),U=uniq(c),R=rows();
  const legend=`<div class="legend"><b>${esc(t('supTitle'))}</b><div class="lg">${heads.map((x,i)=>`<div><span class="n">${i+1}</span><span class="nm">${esc(x)}</span></div>`).join('')}</div><div style="margin-top:8px">${esc(t('supSub'))}</div></div>`;
  const head=`<div class="ihead"><span></span><span></span>${heads.map((h,i)=>`<span><b>${i+1}</b><br>${esc(h)}</span>`).join('')}</div>`;
@@ -463,7 +463,7 @@ function supportHTML(c,r){const heads=t('supHead'),U=uniq(c),R=rows();
   return `<div class="item ${extra||''} ${isAct?'active':''} ${val?'rated':''}" data-k="${esc(k)}"><div class="rk">${n}</div><div class="dxn">${label}</div>${btns}</div>`;};
  const list=U.map((u,n)=>row(hkey(u.k),esc(L(c,'groups')[u.g][u.i]),n+1,r[hkey(u.k)])).join('');
  const next=step2Done(c)?`<div class="nextstep"><span>${esc(t('nextStep2'))}</span><button class="primary" id="toStep3">${esc(t('toStep3'))}</button></div>`:'';
- return legend+`<div class="groupblock"><h3>${esc(t('matchTitle'))}</h3><div class="items">${head}${list}</div></div>`+next+`<div class="backlink"><button id="backStep" data-to="1">${esc(t('backStep'))}</button></div>`;}
+ return legend+`<div class="groupblock"><div class="items">${head}${list}</div></div>`+next+`<div class="backlink"><button id="backStep" data-to="1">${esc(t('backStep'))}</button></div>`;}
 function fitHTML(c,r){const sc=t('fitScale');
  const opts=sc.map(([v,name,txt],i)=>`<button class="sc" data-k="fit" data-v="${v}" aria-pressed="${r.fit===v}"><span class="n">${v}</span><span class="nm">${esc(name)}</span><span>${esc(txt)}</span></button>`).join('');
  return `<div class="fitq"><div class="gtbig">${esc(L(c,'gt'))}</div><div class="ask">${esc(t('fitQ'))}</div><div class="sub">${esc(t('fitSub'))}</div><div class="opts">${opts}</div></div><div class="backlink"><button id="backStep" data-to="2">${esc(t('backStep2'))}</button></div>`;}
