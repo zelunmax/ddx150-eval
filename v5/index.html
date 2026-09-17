@@ -32,7 +32,17 @@ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;pad
  .casepanel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
  .casepanel .doc{flex:1;max-height:none}
  .casepanel .locked{flex:1}
- .col-right{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:2px;scrollbar-gutter:stable}
+ .col-right{min-height:0;overflow:hidden}
+ .gt-card.pin{position:static;box-shadow:none;flex:none}
+ .ddx-card{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+ .ddx-card>h2,.ddx-card>.stepbar,.ddx-card>#qs{flex:none}
+ #ddxGroups{flex:1;min-height:0;display:flex;flex-direction:column}
+ #ddxGroups>.legend,#ddxGroups>.nextstep,#ddxGroups>.backlink,#ddxGroups>.groupblock>h3{flex:none}
+ #ddxGroups>.groupblock{flex:1;min-height:0;display:flex;flex-direction:column}
+ #ddxGroups>.groupblock>.items{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+ #ddxGroups>.groupblock>.items{padding-top:0}
+ #ddxGroups .items .ihead{position:sticky;top:0;z-index:2;background:var(--ddx-bg);padding-top:6px;box-shadow:0 -2px 0 var(--ddx-bg)}
+ #ddxGroups>.fitq{overflow-y:auto;min-height:0}
 }
 @media(max-width:1150px){main{grid-template-columns:1fr}.gt-card.pin{top:calc(var(--hdr-h,110px) + 8px)}}
 .langbar{display:flex;gap:8px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
@@ -412,7 +422,7 @@ function step2Done(c){const r=rec(c);return uniq(c).every(u=>r[hkey(u.k)]>=1);}
 function step3Done(c){return rec(c).fit>=1;}
 function caseComplete(c){return step1Done(c)&&step2Done(c)&&step3Done(c);}
 const nDone=()=>CASES.filter(caseComplete).length;
-function resetCols(){const r=document.querySelector('.col-right');if(r)r.scrollTop=0;}
+function resetCols(){document.querySelectorAll('.col-right,#ddxGroups .items').forEach(r=>{r.scrollTop=0;});}
 /* background theme: auto (follow system) / light / dark */
 const THEMES=['auto','light','dark'];let THEME='auto';try{THEME=localStorage.getItem('ddx150:theme')||'auto';}catch(e){}
 if(!THEMES.includes(THEME))THEME='auto';
