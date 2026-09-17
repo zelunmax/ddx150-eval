@@ -538,6 +538,7 @@ function boot(code){RATER=code;KEY='ddx150:'+PACK+':'+RATER;state=load();BOOTED=
  const setH=()=>{const h=$('stickyTop').getBoundingClientRect().height;document.documentElement.style.setProperty('--sticky-h',(h+149)+'px');document.documentElement.style.setProperty('--hdr-h',h+'px');};requestAnimationFrame(setH);window.addEventListener('resize',setH);if(window.ResizeObserver){new ResizeObserver(setH).observe($('stickyTop'));}}
 $('loginBtn').onclick=doLogin;$('rc').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();doLogin();}});
 try{const l=localStorage.getItem('ddx150:lang');if(l==='zh')LANG='zh';const last=localStorage.getItem('ddx150:lastRater');if(last)$('rc').value=last;}catch(e){}
+applyTheme();
 renderLoginUI();$('rc').focus();
 </script>
 
