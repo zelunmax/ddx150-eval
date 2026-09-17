@@ -469,7 +469,9 @@ function fitHTML(c,r){const sc=t('fitScale');
  return `<div class="fitq"><div class="gtbig">${esc(L(c,'gt'))}</div><div class="ask">${esc(t('fitQ'))}</div><div class="sub">${esc(t('fitSub'))}</div><div class="opts">${opts}</div></div><div class="backlink"><button id="backStep" data-to="2">${esc(t('backStep2'))}</button></div>`;}
 function renderRate(){const c=CASES[ci],r=rec(c),R=rows();if(active>=R.length)active=Math.max(0,R.length-1);
  stepbarHTML(c);
+ const prevList=document.querySelector('#ddxGroups .items');const keepScroll=prevList?prevList.scrollTop:0;
  $('ddxGroups').innerHTML=STEP===1?matchHTML(c,r):STEP===2?supportHTML(c,r):fitHTML(c,r);
+ const newList=document.querySelector('#ddxGroups .items');if(newList){newList.scrollTop=keepScroll;const act=newList.querySelector('.item.active');if(act){const lr=newList.getBoundingClientRect(),ar=act.getBoundingClientRect();if(ar.top<lr.top+40||ar.bottom>lr.bottom)act.scrollIntoView({block:'nearest'});}}
  $('qs').innerHTML=STEP===3?`<input class="cmt" id="ccmt" placeholder="${esc(t('cmtPlaceholder'))}" value="${esc(r.c||'')}">`:'';
  const d=nDone();$('prog').style.width=(100*d/CASES.length)+'%';$('count').textContent=t('casesDoneText')(d,CASES.length);$('where').textContent=t('caseOf')(ci+1,CASES.length);
  const st=$('cstate');st.textContent=caseComplete(c)?t('complete'):t('incomplete');st.className='pill '+(caseComplete(c)?'done':'todo');}
