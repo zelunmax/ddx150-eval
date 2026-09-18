@@ -35,7 +35,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;pad
  .col-right{min-height:0;overflow:hidden}
  .gt-card.pin{position:static;box-shadow:none;flex:none}
  .ddx-card{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
- .ddx-card>h2,.ddx-card>.stepbar,.ddx-card>#qs{flex:none}
+ .ddx-card>#qs{flex:none}
  #ddxGroups{flex:1;min-height:0;display:flex;flex-direction:column}
  #ddxGroups>.legend,#ddxGroups>.nextstep,#ddxGroups>.backlink,#ddxGroups>.groupblock>h3{flex:none}
  #ddxGroups>.groupblock{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -75,9 +75,11 @@ ol.ddx{margin:0;padding:12px 16px 12px 40px;border-bottom:1px solid var(--line)}
 ol.ddx li{padding:1px 0}
 ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-left:4px;margin-left:-4px}
 .groupblock{border-bottom:1px solid var(--line);padding-bottom:6px}
-.stepbar{display:flex;gap:6px;padding:10px 12px 0}
-.stepbar .step{flex:1;text-align:left;border-radius:9px;padding:8px 12px;font-size:13px;line-height:1.3;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
-.stepbar .step b{display:block;font-size:12px;letter-spacing:.03em;text-transform:uppercase}
+.stepbar{display:flex;gap:6px;flex:1;min-width:0;justify-content:center;margin:0 12px}
+.stepbar .step{max-width:320px}
+@media(max-width:1150px){.langbar{flex-wrap:wrap}.stepbar{order:9;flex-basis:100%;margin:6px 0 0}}
+.stepbar .step{flex:1;text-align:left;border-radius:9px;padding:5px 10px;font-size:12px;line-height:1.25;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
+.stepbar .step b{display:block;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase}
 .stepbar .step[aria-current=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
 .stepbar .step.done{border-color:var(--good)}
 .stepbar .step.done b::after{content:' ✓';color:var(--good)}
@@ -248,7 +250,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   <button id="langEn" aria-pressed="true">English</button>
   <button id="langZh" aria-pressed="false">中文</button>
   <button id="themeBtn" class="themebtn" title="Background: auto / light / dark"></button>
-  <span class="grow"></span>
+  <div class="stepbar"><button class="step" id="stepA" data-step="1"></button><button class="step" id="stepB" data-step="2"></button><button class="step" id="stepC" data-step="3"></button></div>
   <button id="prev">← prev</button>
   <span class="pill" id="where"></span>
   <button id="next">next →</button>
@@ -271,7 +273,6 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
       <div class="gt" id="gt"></div>
     </section>
     <section class="panel ddx-card">
-      <div class="stepbar"><button class="step" id="stepA" data-step="1"></button><button class="step" id="stepB" data-step="2"></button><button class="step" id="stepC" data-step="3"></button></div>
       <div id="ddxGroups"></div>
       <div id="qs"></div>
     </section>
