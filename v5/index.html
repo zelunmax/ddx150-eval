@@ -86,7 +86,11 @@ ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-le
 .locked{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:260px;padding:30px 20px;text-align:center;color:var(--muted)}
 .locked .lk-ic{font-size:30px}.locked .lk-t{font-weight:650;color:var(--ink);font-size:15px}.locked .lk-s{font-size:13px;max-width:380px;line-height:1.5}
 .nextstep{margin:12px 12px 6px;padding:12px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.nextstep span{font-size:13.5px}.nextstep button.primary{padding:8px 16px}
+.nextstep span{font-size:13.5px}
+.nextstep.pending{background:var(--panel);border-color:var(--warn);border-style:dashed;cursor:pointer}
+.nextstep.pending span{color:var(--warn);font-weight:600}
+.nextstep button[disabled]{opacity:.45;pointer-events:none}
+.item.flash{box-shadow:inset 0 0 0 2px var(--warn)!important;background:var(--accent-soft)}.nextstep button.primary{padding:8px 16px}
 .dq{margin:6px 12px 8px;padding:12px 14px;border-radius:10px;border:1px dashed var(--line);background:var(--panel)}
 .dq.active{border-style:solid;border-color:var(--accent);background:var(--accent-soft)}
 .dq .ask{font-weight:600;font-size:14px}.dq .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
@@ -311,7 +315,7 @@ const UI = {
   help:'? help',saveProgress:'save progress',loadProgress:'load progress',export:'export CSV',theCase:'The case',ddxTitle:'AI ranked differentials — three systems, top 3 each',
   step1:'Step 1 · Match names',step1sub:'Score each candidate against the ground truth. The case text stays hidden.',step2:'Step 2 · Read the case',
   lockedTitle:'The case opens in step 2',lockedSub:'First score how close each candidate diagnosis is to the ground truth — names only, no clinical context yet.',
-  nextStep:'All candidates scored. Open the case and continue to step 2.',openCase:'Open the case →',backStep:'← back to step 1 (name matching)',
+  nextStep:'All candidates scored. Open the case and continue to step 2.',pendingN:n=>`${n} candidate${n>1?'s':''} still unscored — scroll the list to find ${n>1?'them':'it'}.`,openCase:'Open the case →',backStep:'← back to step 1 (name matching)',
   matchTitle:'Candidate diagnoses (all three systems, duplicates merged)',
   supTitle:'For every candidate, rate how well the HPI on the left supports it:',supHead:['Contradicted','Unlikely','Possible','Supported','Clearly supported'],supSub:'Same list as step 1. Judge against the history only — not against the ground truth.',
   step3:'Step 3 · Judge the ground truth',step3sub:'Last: given this HPI, is the ground truth a fitting diagnosis? (1–5)',
@@ -358,7 +362,7 @@ const UI = {
   help:'？說明',saveProgress:'儲存進度',loadProgress:'載入進度',export:'匯出 CSV',theCase:'病例',ddxTitle:'AI 排序鑑別診斷——三個系統，各取前 3 名',
   step1:'第一步 · 比對名稱',step1sub:'只看診斷名稱，評每個候選與 ground truth 的接近度；病例文本先隱藏。',step2:'第二步 · 閱讀病例',
   lockedTitle:'病例文本在第二步才會顯示',lockedSub:'請先評每個候選診斷與 ground truth 的接近度——只比對名稱，暫時不看臨床脈絡。',
-  nextStep:'所有候選診斷都已評分。展開病例，進入第二步。',openCase:'展開病例 →',backStep:'← 回到第一步（名稱比對）',
+  nextStep:'所有候選診斷都已評分。展開病例，進入第二步。',pendingN:n=>`還有 ${n} 個候選診斷未評分——請捲動清單找到它。`,openCase:'展開病例 →',backStep:'← 回到第一步（名稱比對）',
   matchTitle:'候選診斷（三個系統合併，重複者只列一次）',
   supTitle:'請為每一個候選診斷評分：左側 HPI 有多支持它？',supHead:['矛盾','不太可能','可能','支持','明確支持'],supSub:'與第一步同一份清單。只對照病史，不要對照 ground truth。',
   step3:'第三步 · 評 ground truth',step3sub:'最後：根據這份 HPI，你覺得 ground truth 適合嗎？（1–5）',
@@ -454,7 +458,8 @@ function matchHTML(c,r){const heads=t('colHead'),U=uniq(c),R=rows();
   const btns=[1,2,3,4,5].map(v=>`<button class="sc" data-k="${esc(k)}" data-v="${v}" aria-pressed="${val===v}" title="${esc(heads[v-1])}">${v}</button>`).join('');
   return `<div class="item ${isAct?'active':''} ${val?'rated':''}" data-k="${esc(k)}"><div class="rk">${n+1}</div><div class="dxn">${esc(dx)}</div>${btns}</div>`;}).join('');
  const done=step1Done(c);
- const next=done?`<div class="nextstep"><span>${esc(t('nextStep'))}</span><button class="primary" id="openCase">${esc(t('openCase'))}</button></div>`:'';
+ const left=U.filter(u=>!(r[mkey(u.k)]>=1)).length;
+ const next=done?`<div class="nextstep"><span>${esc(t('nextStep'))}</span><button class="primary" id="openCase">${esc(t('openCase'))}</button></div>`:`<div class="nextstep pending"><span>${esc(t('pendingN')(left))}</span><button class="primary" id="openCase" disabled>${esc(t('openCase'))}</button></div>`;
  return legendHTML()+`<div class="groupblock"><div class="items">${head}${list}</div></div>`+next;}
 function supportHTML(c,r){const heads=t('supHead'),U=uniq(c),R=rows();
  const legend=`<div class="legend"><b>${esc(t('supTitle'))}</b><div class="lg">${heads.map((x,i)=>`<div><span class="n">${i+1}</span><span class="nm">${esc(x)}</span></div>`).join('')}</div><div style="margin-top:8px">${esc(t('supSub'))}</div></div>`;
@@ -463,7 +468,8 @@ function supportHTML(c,r){const heads=t('supHead'),U=uniq(c),R=rows();
   const btns=[1,2,3,4,5].map(v=>`<button class="sc sup" data-k="${esc(k)}" data-v="${v}" aria-pressed="${val===v}" title="${esc(heads[v-1])}">${v}</button>`).join('');
   return `<div class="item ${extra||''} ${isAct?'active':''} ${val?'rated':''}" data-k="${esc(k)}"><div class="rk">${n}</div><div class="dxn">${label}</div>${btns}</div>`;};
  const list=U.map((u,n)=>row(hkey(u.k),esc(L(c,'groups')[u.g][u.i]),n+1,r[hkey(u.k)])).join('');
- const next=step2Done(c)?`<div class="nextstep"><span>${esc(t('nextStep2'))}</span><button class="primary" id="toStep3">${esc(t('toStep3'))}</button></div>`:'';
+ const left2=U.filter(u=>!(r[hkey(u.k)]>=1)).length;
+ const next=step2Done(c)?`<div class="nextstep"><span>${esc(t('nextStep2'))}</span><button class="primary" id="toStep3">${esc(t('toStep3'))}</button></div>`:`<div class="nextstep pending"><span>${esc(t('pendingN')(left2))}</span><button class="primary" id="toStep3" disabled>${esc(t('toStep3'))}</button></div>`;
  return legend+`<div class="groupblock"><div class="items">${head}${list}</div></div>`+next+`<div class="backlink"><button id="backStep" data-to="1">${esc(t('backStep'))}</button></div>`;}
 function fitHTML(c,r){const sc=t('fitScale');
  const opts=sc.map(([v,name,txt],i)=>`<button class="sc" data-k="fit" data-v="${v}" aria-pressed="${r.fit===v}"><span class="n">${v}</span><span class="nm">${esc(name)}</span><span>${esc(txt)}</span></button>`).join('');
@@ -477,6 +483,7 @@ function renderRate(){const c=CASES[ci],r=rec(c),R=rows();if(active>=R.length)ac
  const d=nDone();$('prog').style.width=(100*d/CASES.length)+'%';$('count').textContent=t('casesDoneText')(d,CASES.length);$('where').textContent=t('caseOf')(ci+1,CASES.length);
  const st=$('cstate');st.textContent=caseComplete(c)?t('complete'):t('incomplete');st.className='pill '+(caseComplete(c)?'done':'todo');}
 function render(){renderRecord();renderRate();}
+function gotoFirstUnrated(){const c=CASES[ci],R=rows();const i=R.findIndex(x=>!(rec(c)[x.k]>=1));if(i>=0){active=i;renderRate();const a=document.querySelector('#ddxGroups .item.active');if(a){a.scrollIntoView({block:'center'});a.classList.add('flash');setTimeout(()=>a.classList.remove('flash'),900);}}}
 function setStep(n){const c=CASES[ci],r=Object.assign({},rec(c));r.step=n;state.c[c.study_id]=r;save();STEP=n;active=0;
  const R=rows();const i=R.findIndex(x=>!(rec(c)[x.k]>=1));active=i<0?0:i;
  render();window.scrollTo(0,0);resetCols();}
@@ -498,7 +505,8 @@ document.addEventListener('click',ev=>{if(!BOOTED)return;
  if(ev.target.closest('#openCase')){setStep(2);return;}
  if(ev.target.closest('#toStep3')){setStep(3);return;}
  const bk=ev.target.closest('#backStep');if(bk){setStep(+bk.dataset.to);return;}
- const sb=ev.target.closest('.stepbar .step');if(sb){const n=+sb.dataset.step;const c=CASES[ci];if(n===2&&!step1Done(c))return;if(n===3&&!(step1Done(c)&&step2Done(c)))return;setStep(n);return;}
+ const sb=ev.target.closest('.stepbar .step');if(sb){const n=+sb.dataset.step;const c=CASES[ci];if((n===2&&!step1Done(c))||(n===3&&!(step1Done(c)&&step2Done(c)))){gotoFirstUnrated();return;}setStep(n);return;}
+ const pend=ev.target.closest('.nextstep.pending');if(pend){gotoFirstUnrated();return;}
  const dq=ev.target.closest('.dq');if(dq){const i=rows().findIndex(x=>x.k===dq.dataset.k);if(i>=0){active=i;renderRate();}return;}
  const it=ev.target.closest('.item');if(it){const i=rows().findIndex(x=>x.k===it.dataset.k);if(i>=0){active=i;renderRate();}return;}
  const tb=ev.target.closest('.tabs button');if(tb){document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===tb));renderRecord();}});
