@@ -438,7 +438,7 @@ function applyTheme(){const root=document.documentElement;if(THEME==='auto')root
 function cycleTheme(){THEME=THEMES[(THEMES.indexOf(THEME)+1)%THEMES.length];try{localStorage.setItem('ddx150:theme',THEME);}catch(e){}applyTheme();}
 applyTheme();
 let STEP=1;
-function curStep(c){const r=rec(c);if(r.step)return r.step;if(!step1Done(c))return 1;if(!step2Done(c))return 2;return 3;}
+function curStep(c){const r=rec(c);if(r.step)return r.step;return 3;} /* v6.1: every case opens on step 3 */
 function rows(){const c=CASES[ci];if(STEP===1)return uniq(c).map(u=>({k:mkey(u.k),u}));if(STEP===2)return uniq(c).map(u=>({k:hkey(u.k),u}));return [{k:'fit'}];}
 const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 function renderRecord(){const c=CASES[ci];
