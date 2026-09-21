@@ -13,7 +13,8 @@
 *{box-sizing:border-box}
 body{margin:0;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg)}
 .stickytop{position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
-header{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+header button{padding:6px 9px}
 header h1{font-size:15px;margin:0;font-weight:650;white-space:nowrap}
 .grow{flex:1}
 button{font:inherit;padding:6px 12px;border:1px solid var(--line);background:var(--panel);border-radius:7px;cursor:pointer;color:var(--ink)}
@@ -21,7 +22,7 @@ button:hover{background:var(--accent-soft)}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .pill{font-size:12.5px;color:var(--muted);white-space:nowrap}
-.bar{height:6px;background:var(--line);border-radius:99px;width:180px;overflow:hidden}
+.bar{height:6px;background:var(--line);border-radius:99px;width:120px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--good);width:0}
 main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 16px 14px;align-items:stretch;max-width:1900px;margin:0 auto}
 .col-right{display:flex;flex-direction:column;gap:16px;min-width:0}
@@ -50,11 +51,11 @@ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;pad
 .langbar button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:650}
 #count{cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .decbar{display:flex;gap:8px;padding:8px 16px;background:var(--panel);border-bottom:2px solid var(--line);align-items:center;flex-wrap:wrap}
-.decbtn{font-size:18px;font-weight:800;width:46px;height:36px;padding:0;border-radius:9px;line-height:1}
+.decbtn{font-size:17px;font-weight:800;width:40px;height:34px;padding:0!important;border-radius:9px;line-height:1}
 .decbtn.acc[aria-pressed=true]{background:var(--good);border-color:var(--good);color:#fff}
 .decbtn.rej[aria-pressed=true]{background:var(--err);border-color:var(--err);color:#fff}
 .decsel{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}
-.decnote{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);width:260px}
+.decnote{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);width:150px}
 #caseMeta b{color:var(--ink)}
 .unfinished-panel{padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
 .unfinished-list{display:flex;gap:6px;flex-wrap:wrap}
@@ -88,7 +89,9 @@ ol.ddx li{padding:1px 0}
 ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-left:4px;margin-left:-4px}
 .groupblock{border-bottom:1px solid var(--line);padding-bottom:6px}
 .stepbar{display:flex;gap:6px;flex:1;min-width:0;justify-content:center;margin:0 12px}
-.stepbar .step{max-width:320px}
+.langbar .stepbar .step{max-width:190px;font-size:0;padding:7px 10px;line-height:1.2}
+.langbar .stepbar .step b{font-size:11.5px;display:block}
+.langbar .stepbar .step.done b::after{font-size:11.5px}
 @media(max-width:1150px){.langbar{flex-wrap:wrap}.stepbar{order:9;flex-basis:100%;margin:6px 0 0}}
 .stepbar .step{flex:1;text-align:left;border-radius:9px;padding:5px 10px;font-size:12px;line-height:1.25;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 .stepbar .step b{display:block;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase}
@@ -251,8 +254,12 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   <h1 id="mainTitle">Protégé 150 DDx Rating</h1>
   <label class="pill"><span id="gotoLabel">go to</span> <input id="jump" type="number" min="1" max="150" style="width:64px"></label>
   <button id="firstTodo">first unfinished</button>
-  <span class="pill" id="cstate"></span>
-  <span class="grow"></span>
+  <span class="pill" id="caseMeta"></span>
+  <button class="decbtn acc" id="decAccept">✓</button>
+  <button class="decbtn rej" id="decReject">✗</button>
+  <select id="decReason" class="decsel"></select>
+  <input id="decNote" class="decnote" type="text" maxlength="200">
+  <span class="pill" id="cstate" hidden></span>
   <div class="bar"><i id="prog"></i></div>
   <span class="pill" id="count" role="button" tabindex="0"></span>
   <span class="pill done" id="saved"></span>
@@ -260,28 +267,19 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   <button id="helpBtn">? help</button>
   <button id="savefile">save progress</button>
   <button id="loadBtn">load progress</button>
-  <button class="primary" id="export">export CSV</button>
+  <button class="primary" id="export" hidden>export CSV</button>
 </header>
 <div class="langbar" role="group" aria-label="Language">
   <button id="langEn" aria-pressed="true">English</button>
   <button id="langZh" aria-pressed="false">中文</button>
   <button id="themeBtn" class="themebtn" title="Background: auto / light / dark"></button>
   <div class="stepbar"><button class="step" id="stepA" data-step="1"></button><button class="step" id="stepB" data-step="2"></button><button class="step" id="stepC" data-step="3"></button></div>
-  <button id="prev">← prev</button>
-  <span class="pill" id="where"></span>
-  <button id="next">next →</button>
-</div>
-<div class="decbar" id="decbar">
-  <span class="pill" id="caseMeta"></span>
-  <span class="grow"></span>
-  <button class="decbtn acc" id="decAccept">✓</button>
-  <button class="decbtn rej" id="decReject">✗</button>
-  <select id="decReason" class="decsel"></select>
-  <input id="decNote" class="decnote" type="text" maxlength="200">
-  <span class="grow"></span>
   <label class="pill"><span id="runLabelTxt"></span> <select id="runSel" class="decsel"></select></label>
   <button id="nextRun" class="primary"></button>
   <button id="exportSel"></button>
+  <button id="prev">← prev</button>
+  <span class="pill" id="where"></span>
+  <button id="next">next →</button>
 </div>
 <div class="unfinished-panel" id="unfinishedPanel" hidden><div class="unfinished-list" id="unfinishedList"></div></div>
 </div>
@@ -405,7 +403,7 @@ const UI = {
   selDecideAll:'Please decide ✓ / ✗ for every case in this run first.',selFull:'Target reached — 100 cases accepted. Export the selection.',selExhausted:'Backup pool exhausted — no eligible replacement left. Export what you have.',
   selConfirmNext:(k,n,src)=>`Start the next run with ${k} replacement case${k>1?'s':''} (${n} needed, drawn from ${src==='tier2'?'tier 2 = audited pool outside the 150':'tier 1 = the 50 leftover from the 150'})?`,
   selExportTitle:'Selection export',selExportIntro:'Copy everything below and save it as a .txt / paste to Claude. It contains a JSON summary and a CSV of every decision.',
-  selStatus:(a,tgt,d,m)=>`accepted ${a} / ${tgt} · this run decided ${d} / ${m}`,
+  selStatus:(a,tgt,d,m)=>`accepted ${a}/${tgt} · run ${d}/${m}`,
   caseMeta:(c)=>`<b>${c.chapter}</b> · ${c.gt_type==='symptom_dx'?'symptom':'disease'} · HPI ${c.suff}+${c.focus} · tier ${c.tier}`,caseOf:(i,n)=>`case ${i} / ${n}`,casesDoneText:(d,n)=>`${d} / ${n} cases done`,
   loginIntro:'Three AI systems each interviewed the same simulated patient by telehealth and produced a ranked differential diagnosis. You will judge how close their top-3 candidates come to the ground-truth diagnosis, for 150 cases.',
   instrTitle:'How it works',
@@ -457,7 +455,7 @@ const UI = {
   selDecideAll:'請先對本輪每一例都按 ✓ 或 ✗。',selFull:'已達 100 例，請匯出挑選結果。',selExhausted:'備用池已用完，沒有符合條件的替補。請匯出目前結果。',
   selConfirmNext:(k,n,src)=>`開始下一輪：補入 ${k} 例（需要 ${n} 例，來源：${src==='tier2'?'第二層＝150 例以外通過審核的備用池':'第一層＝150 例中未入選的 50 例'}）？`,
   selExportTitle:'匯出挑選結果',selExportIntro:'複製下方全部內容存成 .txt，或直接貼給 Claude。內含 JSON 摘要與每一例決定的 CSV。',
-  selStatus:(a,tgt,d,m)=>`已收 ${a} / ${tgt} · 本輪已決定 ${d} / ${m}`,
+  selStatus:(a,tgt,d,m)=>`已收 ${a}/${tgt} · 本輪 ${d}/${m}`,
   caseMeta:(c)=>`<b>${c.chapter}</b> · ${c.gt_type==='symptom_dx'?'症狀':'疾病'} · HPI ${c.suff}+${c.focus} · 第 ${c.tier} 層`,caseOf:(i,n)=>`第 ${i} / ${n} 例`,casesDoneText:(d,n)=>`${d} / ${n} 例已完成`,
   loginIntro:'三個 AI 系統各自以遠距問診的方式訪談同一位模擬病人，並產生排序鑑別診斷。你將針對 150 個病例，評斷它們前 3 名候選診斷與 ground truth（正確診斷）有多接近。',
   instrTitle:'作答方式',
@@ -567,7 +565,8 @@ function renderDec(){const c=CASES[ci];if(!c)return;const r=rec(c);
  $('decReason').value=r.reason||'';$('decNote').value=r.dnote||'';$('caseMeta').innerHTML=t('caseMeta')(c);
  const st=$('cstate');st.textContent=r.dec==='accept'?'✓ '+t('selAccept'):r.dec==='reject'?'✗ '+t('selReject'):t('incomplete');st.className='pill '+(r.dec==='accept'?'done':r.dec==='reject'?'todo':'');
  $('nextRun').disabled=!runDecided()||RUNI!==runs().length-1;}
-function setDec(v){const c=CASES[ci],r=Object.assign({},rec(c));if(r.dec===v)delete r.dec;else r.dec=v;r.drun=runs()[RUNI].n;state.c[c.study_id]=r;save();renderRate();}
+function setDec(v){const c=CASES[ci],r=Object.assign({},rec(c));const was=r.dec;if(r.dec===v)delete r.dec;else r.dec=v;r.drun=runs()[RUNI].n;state.c[c.study_id]=r;save();renderRate();
+ if(v==='accept'&&was!=='accept'&&ci<CASES.length-1)go(ci+1);}
 function renderStaticUI(){$('decAccept').title=t('selAccept');$('decReject').title=t('selReject');$('decNote').placeholder=t('selNotePh');$('nextRun').textContent=t('selNext');$('exportSel').textContent=t('selExport');$('runLabelTxt').textContent=t('runWord');
  const rs=t('selReasons');$('decReason').innerHTML=`<option value="">${esc(t('selReasonNone'))}</option>`+Object.keys(rs).map(k=>`<option value="${k}">${esc(rs[k])}</option>`).join('');renderRunSelect();document.title=t('title');$('mainTitle').textContent=t('title');$('prev').textContent=t('prev');$('next').textContent=t('next');$('gotoLabel').textContent=t('goto');
  $('firstTodo').textContent=t('firstUnfinished');$('helpBtn').textContent=t('help');$('savefile').textContent=t('saveProgress');$('loadBtn').textContent=t('loadProgress');$('export').textContent=t('export');
