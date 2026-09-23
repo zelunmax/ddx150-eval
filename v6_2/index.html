@@ -55,6 +55,11 @@ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;pad
 .decbtn.acc[aria-pressed=true]{background:var(--good);border-color:var(--good);color:#fff}
 .decbtn.rej[aria-pressed=true]{background:var(--err);border-color:var(--err);color:#fff}
 .langbar #nextRun:not(.ready){opacity:.55}
+.dist-t{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.dist-t th,.dist-t td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
+.dist-t th:first-child,.dist-t td:first-child{text-align:left}
+.dist-t td.neg{color:var(--err);font-weight:650}.dist-t td.pos{color:var(--warn);font-weight:650}
+.dist-sum{margin-top:10px;font-size:13.5px;color:var(--muted);line-height:1.6}
 .decsel{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}
 .decnote{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);width:150px}
 #caseMeta b{color:var(--ink)}
@@ -278,6 +283,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   <label class="pill"><span id="runLabelTxt"></span> <select id="runSel" class="decsel"></select></label>
   <button id="nextRun" class="primary"></button>
   <button id="exportSel"></button>
+  <button id="distBtn"></button>
   <button id="prev">← prev</button>
   <span class="pill" id="where"></span>
   <button id="next">next →</button>
@@ -310,6 +316,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   <form method="dialog"><button class="primary" id="gotIt">got it</button></form>
 </div></dialog>
 <dialog id="ask"><div class="bd"><p id="askMsg" style="font-size:15px;line-height:1.6;white-space:pre-wrap;margin:0 0 14px"></p><div class="rowbtns"><button class="primary" id="askOk">OK</button><button id="askCancel">Cancel</button></div></div></dialog>
+<dialog id="dist"><div class="bd"><h3 id="distTitle"></h3><div id="distBody"></div><form method="dialog" style="margin-top:12px"><button class="primary">OK</button></form></div></dialog>
 <dialog id="io"><div class="bd">
   <h3 id="ioTitle"></h3>
   <p id="ioIntro" class="pill" style="white-space:normal"></p>
@@ -376,6 +383,17 @@ function uiAsk(msg,withCancel){return new Promise(res=>{const d=$('ask');$('askM
  $('askOk').onclick=()=>done(true);$('askCancel').onclick=()=>done(false);d.addEventListener('close',onClose);try{d.showModal();}catch(e){res(withCancel?window.confirm(msg):(window.alert(msg),true));}});}
 const uiAlert=m=>uiAsk(m,false), uiConfirm=m=>uiAsk(m,true);
 function renderRunSelect(){ const sel=$('runSel'); sel.innerHTML=runs().map((r,i)=>`<option value="${i}">${esc(t('runLabel')(r.n,r.ids.length))}</option>`).join(''); sel.value=String(RUNI); }
+const CHN={'M':{en:'Musculoskeletal',zh:'肌肉骨骼'},'N':{en:'Genitourinary',zh:'泌尿生殖'},'J':{en:'Respiratory',zh:'呼吸'},'H':{en:'Eye/Ear',zh:'眼／耳'},'K':{en:'Digestive',zh:'消化'},'L':{en:'Skin',zh:'皮膚'},'G':{en:'Nervous',zh:'神經'},'R':{en:'Symptoms/signs',zh:'症狀徵候'},'E':{en:'Endocrine',zh:'內分泌'},'B':{en:'Infectious B',zh:'感染 B'},'I':{en:'Circulatory',zh:'循環'},'F':{en:'Mental',zh:'精神'},'S/T':{en:'Injury',zh:'損傷'},'U':{en:'COVID',zh:'COVID'},'D':{en:'Blood',zh:'血液'},'A':{en:'Infectious A',zh:'感染 A'}};
+function showDist(){const acc=accepted(),n=acc.length,cc=chapterCounts(acc),Q=META.quotas100,sh=META.shares989;
+ const chs=Object.keys(Q).sort((a,b)=>sh[b]-sh[a]);
+ let jsd=0;if(n){const p={},q={};chs.forEach(c=>{p[c]=sh[c];q[c]=(cc[c]||0)/n;});const m={};chs.forEach(c=>m[c]=(p[c]+q[c])/2);const kl=(a)=>chs.reduce((t,c)=>t+(a[c]>0?a[c]*Math.log2(a[c]/m[c]):0),0);jsd=(kl(p)+kl(q))/2;}
+ const hd=t('distHead');
+ let h=`<table class="dist-t"><tr>${hd.map(x=>`<th>${esc(x)}</th>`).join('')}</tr>`;
+ chs.forEach(c=>{const got=cc[c]||0,exp=sh[c]*Math.max(n,1),d=got-exp;h+=`<tr><td>${c} ${esc((CHN[c]||{})[LANG]||'')}</td><td>${(100*sh[c]).toFixed(1)}</td><td>${Q[c]}</td><td>${got}</td><td class="${d<=-1?'neg':d>=1?'pos':''}">${d>=0?'+':''}${d.toFixed(1)}</td></tr>`;});
+ h+='</table>';
+ const sy=acc.filter(id=>POOL[id].gt_type==='symptom_dx').length,gt=new Set(acc.map(id=>nk(POOL[id].gt))).size;
+ h+=`<div class="dist-sum">${esc(t('distSum')(n,META.target,n-sy,sy,gt,jsd))}</div>`;
+ $('distTitle').textContent=t('distTitle');$('distBody').innerHTML=h;$('dist').showModal();}
 function exportSelection(){
  const rows=[['study_id','run','decision','reason','note','chapter','gt_type','gt_primary_dx','gt_icd','condition','hpi_sufficiency','hpi_focus','tier','gt_fit_1to5','rater']];
  runs().forEach(r=>r.ids.forEach(id=>{const c=POOL[id],x=state.c[id]||{};rows.push([id,r.n,x.dec||'',x.reason||'',x.dnote||'',c.chapter,c.gt_type,c.gt,c.icd,c.condition,c.suff,c.focus,c.tier,x.fit==null?'':x.fit,RATER]);}));
@@ -418,7 +436,7 @@ const UI = {
   selNext:'Start next run →',selExport:'Export selection',runLabel:(n,k)=>`Run ${n} (${k} cases)`,runWord:'run',
   selDecideAll:'Please decide ✓ / ✗ for every case in this run first — cases still undecided:',askOk:'OK',askCancel:'Cancel',selFull:'Target reached — 100 cases accepted. Export the selection.',selExhausted:'Backup pool exhausted — no eligible replacement left. Export what you have.',
   selConfirmNext:(k,n,src)=>`Start the next run with ${k} replacement case${k>1?'s':''} (${n} needed; source: ${src==='tier2'?'tier 2 = audited pool outside the 150':src==='mixed'?'tier 1 where available, tier 2 for chapters with no tier-1 backup':'tier 1 = the 50 leftover from the 150'}). Chapters with the largest shortfall vs the 989 quota are filled first.`,
-  selByCh:'By chapter:',selExportTitle:'Selection export',selExportIntro:'Copy everything below and save it as a .txt / paste to Claude. It contains a JSON summary and a CSV of every decision.',
+  selByCh:'By chapter:',distBtn:'Distribution',distTitle:'Accepted cases vs the 989-case cohort',distHead:['Chapter','989 %','Quota /100','Accepted','Δ vs expected'],distSum:(n,tgt,dz,sy,gt,j)=>`Accepted ${n}/${tgt}: disease ${dz}, symptom ${sy}; distinct GT names ${gt}. Δ = accepted − (989 share × accepted so far). Chapter JSD vs 989 = ${j.toFixed(4)} bits (0 = identical; the 150 cohort v2 was 0.005).`,selExportTitle:'Selection export',selExportIntro:'Copy everything below and save it as a .txt / paste to Claude. It contains a JSON summary and a CSV of every decision.',
   selStatus:(a,tgt,d,m,dz,sy)=>`accepted ${a}/${tgt} (disease ${dz} · symptom ${sy}) · run ${d}/${m}`,
   caseMeta:(c)=>`<b>${c.chapter}</b> · ${c.gt_type==='symptom_dx'?'symptom':'disease'} · HPI ${c.suff}+${c.focus} · tier ${c.tier}`,caseOf:(i,n)=>`case ${i} / ${n}`,casesDoneText:(d,n)=>`${d} / ${n} cases done`,
   loginIntro:'Three AI systems each interviewed the same simulated patient by telehealth and produced a ranked differential diagnosis. You will judge how close their top-3 candidates come to the ground-truth diagnosis, for 150 cases.',
@@ -470,7 +488,7 @@ const UI = {
   selNext:'開始下一輪 →',selExport:'匯出挑選結果',runLabel:(n,k)=>`第 ${n} 輪（${k} 例）`,runWord:'輪次',
   selDecideAll:'請先對本輪每一例都按 ✓ 或 ✗。尚未決定的例數：',askOk:'確定',askCancel:'取消',selFull:'已達 100 例，請匯出挑選結果。',selExhausted:'備用池已用完，沒有符合條件的替補。請匯出目前結果。',
   selConfirmNext:(k,n,src)=>`開始下一輪：補入 ${k} 例（需要 ${n} 例；來源：${src==='tier2'?'第二層＝150 例以外通過審核的備用池':src==='mixed'?'有第一層備用的章節用第一層，沒有的章節用第二層':'第一層＝150 例中未入選的 50 例'}）。補位順序：距離 989 配額缺口最大的章節優先。`,
-  selByCh:'各章節補入：',selExportTitle:'匯出挑選結果',selExportIntro:'複製下方全部內容存成 .txt，或直接貼給 Claude。內含 JSON 摘要與每一例決定的 CSV。',
+  selByCh:'各章節補入：',distBtn:'分布',distTitle:'已收病例 vs 989 例原始 cohort',distHead:['章節','989 %','配額/100','已收','Δ 相對期望'],distSum:(n,tgt,dz,sy,gt,j)=>`已收 ${n}/${tgt}：疾病 ${dz}、症狀 ${sy}；不同 GT 名稱 ${gt} 個。Δ = 已收 −（989 比例 × 目前已收數）。章節分布 JSD vs 989 = ${j.toFixed(4)} bits（0 為完全相同；150 例 cohort v2 為 0.005）。`,selExportTitle:'匯出挑選結果',selExportIntro:'複製下方全部內容存成 .txt，或直接貼給 Claude。內含 JSON 摘要與每一例決定的 CSV。',
   selStatus:(a,tgt,d,m,dz,sy)=>`已收 ${a}/${tgt}（疾病 ${dz} · 症狀 ${sy}）· 本輪 ${d}/${m}`,
   caseMeta:(c)=>`<b>${c.chapter}</b> · ${c.gt_type==='symptom_dx'?'症狀':'疾病'} · HPI ${c.suff}+${c.focus} · 第 ${c.tier} 層`,caseOf:(i,n)=>`第 ${i} / ${n} 例`,casesDoneText:(d,n)=>`${d} / ${n} 例已完成`,
   loginIntro:'三個 AI 系統各自以遠距問診的方式訪談同一位模擬病人，並產生排序鑑別診斷。你將針對 150 個病例，評斷它們前 3 名候選診斷與 ground truth（正確診斷）有多接近。',
@@ -583,7 +601,7 @@ function renderDec(){const c=CASES[ci];if(!c)return;const r=rec(c);
  $('nextRun').disabled=RUNI!==runs().length-1;$('nextRun').classList.toggle('ready',runDecided());}
 function setDec(v){const c=CASES[ci],r=Object.assign({},rec(c));const was=r.dec;if(r.dec===v)delete r.dec;else r.dec=v;r.drun=runs()[RUNI].n;state.c[c.study_id]=r;save();renderRate();
  if(v==='accept'&&was!=='accept'&&ci<CASES.length-1)go(ci+1);}
-function renderStaticUI(){$('decAccept').title=t('selAccept');$('decReject').title=t('selReject');$('decNote').placeholder=t('selNotePh');$('nextRun').textContent=t('selNext');$('exportSel').textContent=t('selExport');$('runLabelTxt').textContent=t('runWord');
+function renderStaticUI(){$('decAccept').title=t('selAccept');$('decReject').title=t('selReject');$('decNote').placeholder=t('selNotePh');$('nextRun').textContent=t('selNext');$('exportSel').textContent=t('selExport');$('distBtn').textContent=t('distBtn');$('runLabelTxt').textContent=t('runWord');
  const rs=t('selReasons');$('decReason').innerHTML=`<option value="">${esc(t('selReasonNone'))}</option>`+Object.keys(rs).map(k=>`<option value="${k}">${esc(rs[k])}</option>`).join('');renderRunSelect();document.title=t('title');$('mainTitle').textContent=t('title');$('prev').textContent=t('prev');$('next').textContent=t('next');$('gotoLabel').textContent=t('goto');
  $('firstTodo').textContent=t('firstUnfinished');$('helpBtn').textContent=t('help');$('savefile').textContent=t('saveProgress');$('loadBtn').textContent=t('loadProgress');$('export').textContent=t('export');
  $('langEn').setAttribute('aria-pressed',LANG==='en');$('langZh').setAttribute('aria-pressed',LANG==='zh');
@@ -637,7 +655,7 @@ $('export').onclick=exportCSV;
 $('decAccept').onclick=()=>setDec('accept');$('decReject').onclick=()=>setDec('reject');
 $('decReason').onchange=e=>{const c=CASES[ci];state.c[c.study_id]=Object.assign({},rec(c),{reason:e.target.value});save();};
 $('decNote').addEventListener('input',e=>{const c=CASES[ci];state.c[c.study_id]=Object.assign({},rec(c),{dnote:e.target.value});save();});
-$('nextRun').onclick=startNextRun;$('exportSel').onclick=exportSelection;
+$('nextRun').onclick=startNextRun;$('exportSel').onclick=exportSelection;$('distBtn').onclick=showDist;
 $('runSel').onchange=e=>{setRun(+e.target.value);go(0);};
 $('savefile').onclick=()=>openIO(t('ioSave'),t('ioSaveIntro'),JSON.stringify({pack:PACK,rater:RATER,...state}),false);
 $('loadBtn').onclick=()=>openIO(t('ioLoad'),t('ioLoadIntro'),'',true);
