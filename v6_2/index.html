@@ -403,7 +403,7 @@ const UI = {
   selDecideAll:'Please decide ✓ / ✗ for every case in this run first.',selFull:'Target reached — 100 cases accepted. Export the selection.',selExhausted:'Backup pool exhausted — no eligible replacement left. Export what you have.',
   selConfirmNext:(k,n,src)=>`Start the next run with ${k} replacement case${k>1?'s':''} (${n} needed, drawn from ${src==='tier2'?'tier 2 = audited pool outside the 150':'tier 1 = the 50 leftover from the 150'})?`,
   selExportTitle:'Selection export',selExportIntro:'Copy everything below and save it as a .txt / paste to Claude. It contains a JSON summary and a CSV of every decision.',
-  selStatus:(a,tgt,d,m)=>`accepted ${a}/${tgt} · run ${d}/${m}`,
+  selStatus:(a,tgt,d,m,dz,sy)=>`accepted ${a}/${tgt} (disease ${dz} · symptom ${sy}) · run ${d}/${m}`,
   caseMeta:(c)=>`<b>${c.chapter}</b> · ${c.gt_type==='symptom_dx'?'symptom':'disease'} · HPI ${c.suff}+${c.focus} · tier ${c.tier}`,caseOf:(i,n)=>`case ${i} / ${n}`,casesDoneText:(d,n)=>`${d} / ${n} cases done`,
   loginIntro:'Three AI systems each interviewed the same simulated patient by telehealth and produced a ranked differential diagnosis. You will judge how close their top-3 candidates come to the ground-truth diagnosis, for 150 cases.',
   instrTitle:'How it works',
@@ -455,7 +455,7 @@ const UI = {
   selDecideAll:'請先對本輪每一例都按 ✓ 或 ✗。',selFull:'已達 100 例，請匯出挑選結果。',selExhausted:'備用池已用完，沒有符合條件的替補。請匯出目前結果。',
   selConfirmNext:(k,n,src)=>`開始下一輪：補入 ${k} 例（需要 ${n} 例，來源：${src==='tier2'?'第二層＝150 例以外通過審核的備用池':'第一層＝150 例中未入選的 50 例'}）？`,
   selExportTitle:'匯出挑選結果',selExportIntro:'複製下方全部內容存成 .txt，或直接貼給 Claude。內含 JSON 摘要與每一例決定的 CSV。',
-  selStatus:(a,tgt,d,m)=>`已收 ${a}/${tgt} · 本輪 ${d}/${m}`,
+  selStatus:(a,tgt,d,m,dz,sy)=>`已收 ${a}/${tgt}（疾病 ${dz} · 症狀 ${sy}）· 本輪 ${d}/${m}`,
   caseMeta:(c)=>`<b>${c.chapter}</b> · ${c.gt_type==='symptom_dx'?'症狀':'疾病'} · HPI ${c.suff}+${c.focus} · 第 ${c.tier} 層`,caseOf:(i,n)=>`第 ${i} / ${n} 例`,casesDoneText:(d,n)=>`${d} / ${n} 例已完成`,
   loginIntro:'三個 AI 系統各自以遠距問診的方式訪談同一位模擬病人，並產生排序鑑別診斷。你將針對 150 個病例，評斷它們前 3 名候選診斷與 ground truth（正確診斷）有多接近。',
   instrTitle:'作答方式',
@@ -553,7 +553,7 @@ function renderRate(){const c=CASES[ci],r=rec(c),R=rows();if(active>=R.length)ac
  $('ddxGroups').innerHTML=STEP===1?matchHTML(c,r):STEP===2?supportHTML(c,r):fitHTML(c,r);
  const newList=document.querySelector('#ddxGroups .items');if(newList){newList.scrollTop=keepScroll;const act=newList.querySelector('.item.active');if(act){const lr=newList.getBoundingClientRect(),ar=act.getBoundingClientRect();if(ar.top<lr.top+40||ar.bottom>lr.bottom)act.scrollIntoView({block:'nearest'});}}
  $('qs').innerHTML=STEP===3?`<input class="cmt" id="ccmt" placeholder="${esc(t('cmtPlaceholder'))}" value="${esc(r.c||'')}">`:'';
- const d=nDone(),acc=accepted().length;$('prog').style.width=(100*Math.min(acc,META.target)/META.target)+'%';$('count').textContent=t('selStatus')(acc,META.target,d,CASES.length);renderDec();$('where').textContent=t('caseOf')(ci+1,CASES.length);
+ const d=nDone(),accL=accepted(),acc=accL.length,sy=accL.filter(id=>POOL[id].gt_type==='symptom_dx').length;$('prog').style.width=(100*Math.min(acc,META.target)/META.target)+'%';$('count').textContent=t('selStatus')(acc,META.target,d,CASES.length,acc-sy,sy);renderDec();$('where').textContent=t('caseOf')(ci+1,CASES.length);
 }
 function render(){renderRecord();renderRate();}
 function gotoFirstUnrated(){const c=CASES[ci],R=rows();const i=R.findIndex(x=>!(rec(c)[x.k]>=1));if(i>=0){active=i;renderRate();const a=document.querySelector('#ddxGroups .item.active');if(a){a.scrollIntoView({block:'center'});a.classList.add('flash');setTimeout(()=>a.classList.remove('flash'),900);}}}
