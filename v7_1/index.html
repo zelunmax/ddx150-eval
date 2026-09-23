@@ -121,6 +121,7 @@ ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-le
 .gtq.active{border-color:var(--good);background:var(--gt-bg)}
 ol.ddx.plain{border-bottom:0;padding:4px 16px 8px 40px}
 .backlink{font-size:12.5px;color:var(--muted);padding:0 16px 10px}.backlink button{padding:3px 8px;font-size:12px}
+.backlink.row2{display:flex;align-items:center;gap:8px;padding:4px 16px 10px}.backlink.row2 #nextCase{padding:8px 16px;font-size:14px;font-weight:650}
 .legend{padding:12px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.5}
 .legend b{color:var(--ink)}
 .legend .lg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
@@ -322,7 +323,7 @@ const UI = {
   matchTitle:'Candidate diagnoses (all three systems, duplicates merged)',
   supTitle:'For every candidate, rate how well the HPI on the left supports it:',supHead:['Contradicted','Unlikely','Possible','Supported','Clearly supported'],supSub:'Same list as step 1. Judge against the history only — not against the ground truth.',
   step3:'Step 3 · Judge the ground truth',step3sub:'Last: given this HPI, is the ground truth a fitting diagnosis? (1–5)',
-  nextStep2:'All candidates scored. Continue to step 3.',toStep3:'Continue →',backStep2:'← back to step 2 (HPI support)',
+  nextStep2:'All candidates scored. Continue to step 3.',toStep3:'Continue →',backStep2:'← back to step 2 (HPI support)',nextCaseBtn:'Next case →',
   fitQ:'Given this HPI, how fitting is the ground-truth diagnosis?',fitSub:'You have now read the case and scored every candidate. This question checks the benchmark item itself, not the AI: is the ground truth a diagnosis this history can reasonably carry?',
   fitScale:[[1,'Not fitting','The history does not support it, or points elsewhere.'],[2,'Poor fit','Compatible at best; key features absent or contradicted.'],[3,'Possible','Plausible but under-determined by this history.'],[4,'Fitting','A reasonable diagnosis for this history.'],[5,'Clearly fitting','The history clearly supports it; most clinicians would arrive here.']],
   step2sub:'Then rate how well the HPI supports each candidate (1–5). The ground truth is hidden in this step.',
@@ -369,7 +370,7 @@ const UI = {
   matchTitle:'候選診斷（三個系統合併，重複者只列一次）',
   supTitle:'請為每一個候選診斷評分：左側 HPI 有多支持它？',supHead:['矛盾','不太可能','可能','支持','明確支持'],supSub:'與第一步同一份清單。只對照病史，不要對照 ground truth。',
   step3:'第三步 · 評 ground truth',step3sub:'最後：根據這份 HPI，你覺得 ground truth 適合嗎？（1–5）',
-  nextStep2:'所有候選診斷都已評分。進入第三步。',toStep3:'繼續 →',backStep2:'← 回到第二步（HPI 支持度）',
+  nextStep2:'所有候選診斷都已評分。進入第三步。',toStep3:'繼續 →',backStep2:'← 回到第二步（HPI 支持度）',nextCaseBtn:'下一例 →',
   fitQ:'根據這份 HPI，你覺得 ground truth 這個診斷適合嗎？',fitSub:'你已經讀完病例、也評完所有候選診斷。這題檢查的是題目本身，不是 AI：這份病史能合理地承載 ground truth 這個診斷嗎？',
   fitScale:[[1,'不適合','病史不支持，或指向別的診斷。'],[2,'不太適合','勉強相容；關鍵特徵缺失或矛盾。'],[3,'可能','合理但病史資訊不足以確立。'],[4,'適合','對這份病史是合理的診斷。'],[5,'非常適合','病史明確支持；多數醫師都會得到這個診斷。']],
   step2sub:'再評 HPI 對每個候選診斷的支持程度（1–5）；這一步會隱藏 ground truth。',
@@ -516,7 +517,7 @@ function supportHTML(c,r){const heads=t('supHead'),U=uniq(c),R=rows();
  return legend+`<div class="groupblock"><div class="items">${head}${list}</div></div>`+next+`<div class="backlink"><button id="backStep" data-to="1">${esc(t('backStep'))}</button></div>`;}
 function fitHTML(c,r){const sc=t('fitScale');
  const opts=sc.map(([v,name,txt],i)=>`<button class="sc" data-k="fit" data-v="${v}" aria-pressed="${r.fit===v}"><span class="n">${v}</span><span class="nm">${esc(name)}</span><span>${esc(txt)}</span></button>`).join('');
- return `<div class="fitq"><div class="gtbig">${esc(L(c,'gt'))}</div><div class="ask">${esc(t('fitQ'))}</div><div class="sub">${esc(t('fitSub'))}</div><div class="opts">${opts}</div></div><div class="backlink"><button id="backStep" data-to="2">${esc(t('backStep2'))}</button></div>`;}
+ return `<div class="fitq"><div class="gtbig">${esc(L(c,'gt'))}</div><div class="ask">${esc(t('fitQ'))}</div><div class="sub">${esc(t('fitSub'))}</div><div class="opts">${opts}</div></div><div class="backlink row2"><button id="backStep" data-to="2">${esc(t('backStep2'))}</button><span class="grow"></span><button class="primary" id="nextCase" ${ci>=CASES.length-1?'disabled':''}>${esc(t('nextCaseBtn'))}</button></div>`;}
 function renderRate(){const c=CASES[ci],r=rec(c),R=rows();if(active>=R.length)active=Math.max(0,R.length-1);
  stepbarHTML(c);
  const prevList=document.querySelector('#ddxGroups .items');const keepScroll=prevList?prevList.scrollTop:0;
@@ -547,6 +548,7 @@ document.addEventListener('click',ev=>{if(!BOOTED)return;
  const sc=ev.target.closest('button.sc');if(sc){setScore(sc.dataset.k,+sc.dataset.v);return;}
  if(ev.target.closest('#openCase')){setStep(2);return;}
  if(ev.target.closest('#toStep3')){setStep(3);return;}
+ if(ev.target.closest('#nextCase')){go(ci+1);return;}
  const bk=ev.target.closest('#backStep');if(bk){setStep(+bk.dataset.to);return;}
  const sb=ev.target.closest('.stepbar .step');if(sb){const n=+sb.dataset.step;const c=CASES[ci];if((n===2&&!step1Done(c))||(n===3&&!(step1Done(c)&&step2Done(c)))){gotoFirstUnrated();return;}setStep(n);return;}
  const pend=ev.target.closest('.nextstep.pending');if(pend){gotoFirstUnrated();return;}
