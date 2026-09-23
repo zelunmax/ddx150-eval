@@ -365,8 +365,8 @@ function planNextRun(){
   for(const c of chs){ if((Q[c]-(accCount[c]||0))<=0)break; const x=ALL.find(id=>POOL[id].chapter===c&&strict(id)&&typeOK(id)); if(x)return x; }
   for(const c of chs){ if((Q[c]-(accCount[c]||0))<=0)break; const x=ALL.find(id=>POOL[id].chapter===c&&strict(id)); if(x)return x; }
   for(const c of chs){ if((Q[c]-(accCount[c]||0))<=0)break; const x=ALL.find(id=>POOL[id].chapter===c&&relaxed(id)); if(x)return x; }
-  let x=ALL.find(id=>strict(id)&&typeOK(id)); if(x)return x;
-  return ALL.find(strict)||null; }
+  /* chapters already at/over quota are never offered again; if no deficit chapter has an eligible case, stop */
+  return null; }
  let tiers=new Set();
  for(let k=0;k<need;k++){ const x=pick(); if(!x) break; picked.push(x); tiers.add(POOL[x].tier); const g=nk(POOL[x].gt); gtCount[g]=(gtCount[g]||0)+1; accCount[POOL[x].chapter]=(accCount[POOL[x].chapter]||0)+1; if(POOL[x].gt_type==='symptom_dx')sym++; }
  const src=tiers.size===2?'mixed':tiers.has(2)?'tier2':'tier1';
@@ -434,7 +434,7 @@ const UI = {
   gotIt:'got it',allDone:'Every case in this run has been decided.',
   selAccept:'Accept',selReject:'Reject',selReasonNone:'reason (optional)',selReasons:{hpi:'HPI insufficient',gt:'GT unreasonable',other:'other'},selNotePh:'note (optional)',
   selNext:'Start next run →',selExport:'Export selection',runLabel:(n,k)=>`Run ${n} (${k} cases)`,runWord:'run',
-  selDecideAll:'Please decide ✓ / ✗ for every case in this run first — cases still undecided:',askOk:'OK',askCancel:'Cancel',selFull:'Target reached — 100 cases accepted. Export the selection.',selExhausted:'Backup pool exhausted — no eligible replacement left. Export what you have.',
+  selDecideAll:'Please decide ✓ / ✗ for every case in this run first — cases still undecided:',askOk:'OK',askCancel:'Cancel',selFull:'Target reached — 100 cases accepted. Export the selection.',selExhausted:'No eligible replacement left in the chapters that are still below quota (chapters already at quota are not offered). Export what you have, or accept a slightly smaller cohort.',
   selConfirmNext:(k,n,src)=>`Start the next run with ${k} replacement case${k>1?'s':''} (${n} needed; source: ${src==='tier2'?'tier 2 = audited pool outside the 150':src==='mixed'?'tier 1 where available, tier 2 for chapters with no tier-1 backup':'tier 1 = the 50 leftover from the 150'}). Chapters with the largest shortfall vs the 989 quota are filled first.`,
   selByCh:'By chapter:',distBtn:'Distribution',distTitle:'Accepted cases vs the 989-case cohort',distHead:['Chapter','989 %','Quota /100','Accepted','Δ vs expected'],distSum:(n,tgt,dz,sy,gt,j)=>`Accepted ${n}/${tgt}: disease ${dz}, symptom ${sy}; distinct GT names ${gt}. Δ = accepted − (989 share × accepted so far). Chapter JSD vs 989 = ${j.toFixed(4)} bits (0 = identical; the 150 cohort v2 was 0.005).`,selExportTitle:'Selection export',selExportIntro:'Copy everything below and save it as a .txt / paste to Claude. It contains a JSON summary and a CSV of every decision.',
   selStatus:(a,tgt,d,m,dz,sy)=>`accepted ${a}/${tgt} (disease ${dz} · symptom ${sy}) · run ${d}/${m}`,
@@ -486,7 +486,7 @@ const UI = {
   gotIt:'知道了',allDone:'本輪病例都已決定。',
   selAccept:'收',selReject:'不收',selReasonNone:'原因（選填）',selReasons:{hpi:'HPI 資訊不足',gt:'GT 不合理',other:'其他'},selNotePh:'備註（選填）',
   selNext:'開始下一輪 →',selExport:'匯出挑選結果',runLabel:(n,k)=>`第 ${n} 輪（${k} 例）`,runWord:'輪次',
-  selDecideAll:'請先對本輪每一例都按 ✓ 或 ✗。尚未決定的例數：',askOk:'確定',askCancel:'取消',selFull:'已達 100 例，請匯出挑選結果。',selExhausted:'備用池已用完，沒有符合條件的替補。請匯出目前結果。',
+  selDecideAll:'請先對本輪每一例都按 ✓ 或 ✗。尚未決定的例數：',askOk:'確定',askCancel:'取消',selFull:'已達 100 例，請匯出挑選結果。',selExhausted:'尚未補滿的章節已沒有可用的替補病例（已達配額的章節不再提供）。請匯出目前結果，或接受略少於 100 例。',
   selConfirmNext:(k,n,src)=>`開始下一輪：補入 ${k} 例（需要 ${n} 例；來源：${src==='tier2'?'第二層＝150 例以外通過審核的備用池':src==='mixed'?'有第一層備用的章節用第一層，沒有的章節用第二層':'第一層＝150 例中未入選的 50 例'}）。補位順序：距離 989 配額缺口最大的章節優先。`,
   selByCh:'各章節補入：',distBtn:'分布',distTitle:'已收病例 vs 989 例原始 cohort',distHead:['章節','989 %','配額/100','已收','Δ 相對期望'],distSum:(n,tgt,dz,sy,gt,j)=>`已收 ${n}/${tgt}：疾病 ${dz}、症狀 ${sy}；不同 GT 名稱 ${gt} 個。Δ = 已收 −（989 比例 × 目前已收數）。章節分布 JSD vs 989 = ${j.toFixed(4)} bits（0 為完全相同；150 例 cohort v2 為 0.005）。`,selExportTitle:'匯出挑選結果',selExportIntro:'複製下方全部內容存成 .txt，或直接貼給 Claude。內含 JSON 摘要與每一例決定的 CSV。',
   selStatus:(a,tgt,d,m,dz,sy)=>`已收 ${a}/${tgt}（疾病 ${dz} · 症狀 ${sy}）· 本輪 ${d}/${m}`,
