@@ -89,11 +89,11 @@ ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-le
 @media(max-width:1150px){.langbar{flex-wrap:wrap}.stepbar{order:9;flex-basis:100%;margin:6px 0 0}}
 .stepbar .step{flex:1;text-align:left;border-radius:9px;padding:5px 10px;font-size:12px;line-height:1.25;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 .stepbar .step b{display:block;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase}
-.stepbar .step[aria-current=true]{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
-.stepbar .step.done{border-color:var(--good);background:var(--good);color:var(--on-good)}
-.stepbar .step.done[aria-current=true]{background:var(--good);border-color:var(--good);color:var(--on-good);outline:2px solid var(--accent);outline-offset:2px}
-.stepbar .step.done b::after{content:' ✓'}
-.stepbar .step:hover{filter:brightness(.97)}
+.stepbar .step[aria-current=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.stepbar .step.done{border-color:var(--good);background:var(--hit);color:var(--ink)}
+.stepbar .step.done b{color:var(--good)}
+.stepbar .step.done[aria-current=true]{background:var(--hit);box-shadow:inset 0 0 0 2px var(--accent);border-color:var(--accent)}
+.stepbar .step.done b::after{content:' ✓';color:var(--good)}
 .locked{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:260px;padding:30px 20px;text-align:center;color:var(--muted)}
 .locked .lk-ic{font-size:30px}.locked .lk-t{font-weight:650;color:var(--ink);font-size:15px}.locked .lk-s{font-size:13px;max-width:380px;line-height:1.5}
 .nextstep{margin:12px 12px 6px;padding:12px 14px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--accent);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -229,6 +229,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
 .loginlangs button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:650}
 .msg{margin-top:10px;font-size:14px;min-height:20px}
 .msg.err{color:var(--err);font-weight:650}
+.buildtag{margin-top:18px;font-size:11.5px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
 .rowbtns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 </style>
 
@@ -259,6 +260,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
     <h2 id="exTitle"></h2>
     <p id="exIntro"></p>
     <div class="exbox" id="exBox"></div>
+    <div class="buildtag" id="buildTag">build v7.1.23</div>
   </div>
 </div>
 
