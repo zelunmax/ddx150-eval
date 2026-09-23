@@ -186,6 +186,14 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
 .exbox .exgt b{font-size:15px}
 .exbox .exrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--ddx-bg);font-size:14px}
 .exbox .exrow:last-child{border-bottom:0}
+.exbox .exstep{padding:8px 14px;font-size:12.5px;font-weight:700;letter-spacing:.02em;color:var(--accent);background:var(--panel);border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
+.exbox .exstep:first-of-type{border-top:0}
+.exbox .exhpi{padding:9px 14px;font-size:13.5px;line-height:1.5;background:var(--doc-bg);border-bottom:1px solid var(--line)}
+.exbox .exhpi b{color:var(--pt);margin-right:4px}
+.exbox .exrow.exfit{background:var(--gt-bg)}
+.exbox .chips span.on.sup{background:var(--accent);border-color:var(--accent)}
+.exbox .chips span.on.sup.s5{background:var(--good);border-color:var(--good)}.exbox .chips span.on.sup.s1{background:var(--err);border-color:var(--err)}
+.exbox .chips span.on.fit{background:var(--good);border-color:var(--good)}
 .exbox .exdx{line-height:1.4}
 .exbox .exwhy{font-size:12.5px;color:var(--muted);grid-column:1/-1;margin-top:-4px}
 .exbox .chips{display:flex;gap:4px}
@@ -337,22 +345,27 @@ const UI = {
   groupQ:'',none:'',title:'Protégé 100 DDx Rating v7.1',legendTitle:'For every candidate, rate how close it is to the ground truth:',legendSub:'Then, for each group as a whole, rate how <b>appropriate</b> its three candidates are for this HPI (1–5).',colHead:['Unrelated','Somewhat related','Related','Very close','Exact / same'],apQ:'How APPROPRIATE is this group’s differential for this HPI?',apSub:'Judge the three candidates as a set against the differential you would expect from this history — independent of whether they hit the ground truth.',apScale:['Very inappropriate','Inappropriate','Neither','Appropriate','Very appropriate'],
   helpTitle:'How to use this',
   help1:'Three different AI systems each interviewed the same simulated patient and produced a ranked differential. The right-hand panel shows the <b>top 3</b> from each system as Group 1, 2 and 3. Which system is which group is randomised per case and known only to the study lead — do not try to guess it.',
-  help2:'Each case has two steps. <b>Step 1</b>: the case text is hidden; score every candidate diagnosis (duplicates across the three systems merged) from <b>1 to 5</b> for how close it is to the ground truth. <b>Step 2</b>: the case opens; the same list comes back and you score each candidate from <b>1 to 5</b> for how well the <b>HPI supports it</b> . <b>Step 3</b>: one final question — given this HPI, how fitting is the ground-truth diagnosis (1–5)? Number keys answer the highlighted row; the highlight advances by itself.',
+  help2:'Each case has three steps. <b>Step 1</b>: compare the diagnosis names — score every candidate diagnosis (duplicates across the three systems merged) from <b>1 to 5</b> for how close it is to the ground truth. <b>Step 2</b>: judge the AI differentials against the case — from the history (HPI), can each candidate be reasonably inferred? Score each from <b>1 to 5</b> for how well the <b>HPI supports it</b>. <b>Step 3</b>: judge the ground truth — given this HPI, how fitting is the ground-truth diagnosis (1–5)? Number keys answer the highlighted row; the highlight advances by itself.',
   help3a:'<b>5 Exact / same</b> — the same clinical diagnosis. <b>4 Very close</b> — the same clinical entity stated more broadly or more specifically, with essentially the same management. <b>3 Related</b> — right organ and process, but a clinically meaningful difference (laterality, a complication, acute vs chronic, a different subtype) that would change the picture or work-up.',
   help3b:'<b>2 Somewhat related</b> — same organ system or a plausible alternative, but unlikely to help. <b>1 Unrelated</b> — nothing to do with the ground truth. Scores of 4 and 5 are counted as a “hit” for top-1 / top-3 accuracy.',
   help3d:'<b>HPI support</b> (step 2): 5 clearly supported — any clinician would list it; 4 supported — reasonable to list; 3 possible — partly compatible but key features missing; 2 unlikely — the history mostly argues against it; 1 contradicted or unrelated. Judge against the history only, not against the ground truth. <b>Step 3</b> asks once per case whether the ground truth fits this HPI (1 not fitting … 5 clearly fitting) — that checks the benchmark item itself.',
-  help4:'Judge the clinical concept, not the wording or coding: synonyms, abbreviations, eponyms and lay terms are the same diagnosis, and administrative qualifiers such as “unspecified” or initial/subsequent encounter do not matter. Clinically meaningful differences do matter — wrong side, a complication present or absent, acute vs chronic — and should lower the score. Be consistent across cases.',
+  help4:'Judge mainly by the meaning and definition of the diagnosis, not by wording or coding. Score every item on its own and stay consistent across cases.',
   help5:'Progress saves automatically in this browser. Press <b>export CSV</b> when done: the CSV appears in a box you can copy. <b>save progress</b> gives you a JSON text to keep; <b>load progress</b> pastes it back.',
   help6:'Keys: <kbd>1</kbd>–<kbd>5</kbd> score the highlighted row (all steps) · <kbd>Enter</kbd> go to the next step when the current one is done · <kbd>↑</kbd> <kbd>↓</kbd> move · <kbd>n</kbd> next case · <kbd>p</kbd> previous · <kbd>Esc</kbd> leave the comment box.',
   gotIt:'got it',syncPending:'☁ saving…',syncLoading:'☁ loading your progress…',syncOk:d=>`☁ synced ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`,syncOkTitle:'Your progress is stored in the cloud under your rater code. You can continue on any computer.',syncErr:'☁ not synced yet',syncRestored:n=>`☁ restored ${n} case${n>1?'s':''} from the cloud`,syncNew:'☁ synced (new rater)',syncSlow:'☁ cloud is slow — started with local progress, still syncing…',codeHintCloud:'Your progress is saved to the cloud under this code after every answer — use the same code on any computer to continue where you left off.',allDone:'Every case is done. Please export the CSV.',caseOf:(i,n)=>`case ${i} / ${n}`,casesDoneText:(d,n)=>`${d} / ${n} cases done`,
   loginIntro:'Three AI systems each interviewed the same simulated patient by telehealth and produced a ranked differential diagnosis. You will judge how close their top-3 candidates come to the ground-truth diagnosis, for 100 cases.',
   instrTitle:'How it works',
-  instrSteps:['<b>Step 1 — Match names.</b> The case is hidden. Left: the <b>ground truth</b>. Right: the candidate diagnoses from three AI systems, merged into one list. Rate each candidate <b>1–5 for how close it is to the ground truth</b>. Number keys work; the highlight moves down by itself.','<b>Step 2 — Read the case.</b> Press <b>Open the case</b>. The same list returns; now rate each candidate <b>1–5 for how well the HPI supports it</b> (1 contradicted … 5 clearly supported). Judge against the history only.','<b>Step 3 — Judge the ground truth.</b> Given this HPI, how fitting is the ground-truth diagnosis (1–5)? Comment optional.','<b>Rules.</b> Judge the clinical concept, not wording or ICD codes: synonyms, eponyms and lay terms are the same diagnosis; “unspecified” and encounter qualifiers do not matter. Wrong side, a complication present or absent, acute vs chronic <b>do</b> matter. Score every item on its own and stay consistent across cases.','<b>Saving.</b> Every answer is saved automatically to the cloud under your rater code — use the same code on any computer to continue where you left off. <b>Save progress</b> forces a save; <b>Export CSV</b> is optional.'],
+  instrSteps:['<b>Step 1 — Compare the diagnosis names.</b> Left: the <b>ground truth</b>. Right: the candidate diagnoses from three AI systems, merged into one list. Rate each candidate <b>1–5 for how close it is to the ground truth</b>. Number keys work; the highlight moves down by itself.','<b>Step 2 — Judge the AI differentials against the case.</b> From the information in the history (HPI), can the diagnosis on the left be reasonably inferred? Rate each candidate <b>1–5 for how well the HPI supports it</b> (1 contradicted … 5 clearly supported).','<b>Step 3 — Judge the ground truth.</b> Given this HPI, how fitting is the ground-truth diagnosis (1–5)? Comment optional.','<b>Rules.</b> Judge mainly by the meaning and definition of the diagnosis; score every item on its own and stay consistent across cases.','<b>Saving.</b> Every answer is saved automatically to the cloud under your rater code — use the same code on any computer to continue where you left off. <b>Save progress</b> forces a save; <b>Export CSV</b> is optional.'],
   scaleTitle:'The 1–5 scale',
   exTitle:'Worked example',
-  exIntro:'Step 1, closeness to the ground truth — a made-up example that is not one of the study cases.',
+  exIntro:'A made-up example (not one of the study cases) walked through all three steps.',
+  exHpiLabel:'HPI (summary)',exFitLabel:'Given this HPI, how fitting is the ground truth?',
+  exSteps:['Step 1 — closeness to the ground truth','Step 2 — how well the HPI supports each candidate','Step 3 — fit of the ground truth to the HPI'],
+  exHPI:'22-year-old man, 18 hours of periumbilical pain that migrated to the right lower quadrant, nausea and one episode of vomiting, low-grade fever, pain worse with coughing and walking. No diarrhoea, no cough, no urinary symptoms. Appetite lost since yesterday.',
   exGT:'Acute appendicitis',
   exRows:[['Acute appendicitis',5,'Same diagnosis.'],['Appendicitis, unspecified',4,'Same clinical entity, stated more broadly — management is essentially the same.'],['Acute appendicitis with perforation',3,'Right organ and process, but a complication is added — that changes the picture and the work-up, so not “very close”.'],['Mesenteric lymphadenitis',2,'Same region and a plausible alternative for the presentation, but a different disease.'],['Community-acquired pneumonia',1,'Unrelated to the ground truth.']],
+  exRows2:[['Acute appendicitis',5,'Migrating RLQ pain, anorexia, low-grade fever — any clinician would list it.'],['Appendicitis, unspecified',5,'Same features support it just as well.'],['Acute appendicitis with perforation',3,'Compatible, but only 18 hours in and no signs of peritonitis or sepsis — key features missing.'],['Mesenteric lymphadenitis',3,'Possible mimic of RLQ pain in a young adult, but no preceding viral illness or diarrhoea.'],['Community-acquired pneumonia',1,'No cough or respiratory symptoms — the history argues against it.']],
+  exFit:[5,'The HPI is a classic presentation of the ground truth — the item itself is sound.'],
   startTitle:'Start',
   codeLabel:'Your rater code',codeHint:'A–Z, 0–9, hyphen and underscore, up to 16 characters.',signIn:'Enter',
   errCodeFormat:'The rater code may use A–Z, 0–9, - and _ only, 1–16 characters.',raterWho:c=>`Rater: ${c}`,
@@ -382,22 +395,27 @@ const UI = {
   cmtPlaceholder:'針對此病例的備註（選填）',groupTitle:['第一組','第二組','第三組'],
   groupQ:'',none:'',title:'Protégé 100 DDx 評分 v7.1',helpTitle:'使用說明',legendTitle:'請為每一個候選診斷評分：它與 ground truth 有多接近？',legendSub:'接著針對每一組整體，評分這三個候選診斷對這份 HPI 有多<b>適當</b>（1–5）。',colHead:['無關','略有相關','相關','非常接近','完全符合'],apQ:'這一組的鑑別診斷對這份 HPI 有多適當？',apSub:'把三個候選診斷當成一組，與你依這份病史預期的鑑別診斷相比——不論它們有沒有命中 ground truth。',apScale:['非常不適當','不適當','中性','適當','非常適當'],
   help1:'三個不同的 AI 系統各自問診了同一位模擬病人，並產生排序鑑別診斷。右側顯示每個系統的<b>前 3 名</b>，分別標為第一、二、三組。哪一組對應哪個系統在每個病例中隨機分配，只有計畫主持人知道——請不要嘗試猜測。',
-  help2:'每個病例分兩步。<b>第一步</b>：病例文本隱藏，對每個候選診斷（三個系統合併、重複者只列一次）給 <b>1 到 5</b> 分，代表與 ground truth 的接近度。<b>第二步</b>：展開病例，同一份清單再出現一次，這次對每個候選診斷給 <b>1 到 5</b> 分，代表 <b>HPI 有多支持它</b>。<b>第三步</b>：最後一題——根據這份 HPI，ground truth 這個診斷適合嗎（1–5）？數字鍵作答亮起的那一列，亮框會自動前進。',
+  help2:'每個病例分三步。<b>第一步</b>：比對兩邊診斷名稱是否接近——對每個候選診斷（三個系統合併、重複者只列一次）給 <b>1 到 5</b> 分，代表與 ground truth 的接近度。<b>第二步</b>：評估 AI 產出的鑑別診斷適確性——從病歷（HPI）的資訊，是否可以合理推測該診斷？給 <b>1 到 5</b> 分，代表 <b>HPI 有多支持它</b>。<b>第三步</b>：評估 ground truth 的合適度——根據這份 HPI，ground truth 這個診斷適合嗎（1–5）？數字鍵作答亮起的那一列，亮框會自動前進。',
   help3a:'<b>5 完全符合</b>——同一個臨床診斷。<b>4 非常接近</b>——同一個臨床實體，只是講得較廣或較具體，處置基本相同。<b>3 相關</b>——器官與病程對了，但有臨床上有意義的差異（左右側、併發症、急性／慢性、不同次分型），會改變臨床判斷或檢查方向。',
   help3b:'<b>2 略有相關</b>——同一器官系統或合理的替代診斷，但不太有幫助。<b>1 無關</b>——與 ground truth 無關。4 分與 5 分會被計為 top-1／top-3 的「命中」。',
   help3d:'<b>HPI 支持度</b>（第二步）：5 明確支持——任何醫師都會列入鑑別；4 支持——合理列入；3 可能——部分相容但缺關鍵特徵；2 不太可能——病史大多不支持；1 矛盾或完全無關。只對照病史，不要對照 ground truth。<b>第三步</b>每例問一次：根據這份 HPI，ground truth 適合嗎（1 不適合 … 5 非常適合）——那題檢查的是題目本身。',
-  help4:'評斷臨床概念，而非用詞或編碼：同義詞、縮寫、人名病、口語說法視為同一個診斷；「未明示」、初次／後續就診這類行政性修飾語不影響判斷。但臨床上有意義的差異要扣分——左右側錯誤、有無併發症、急性／慢性不同——並請在所有病例中保持一致。',
+  help4:'主要從診斷的語意以及定義判斷，而非用詞或編碼。每一項獨立評分，並在所有病例中保持一致。',
   help5:'進度會自動儲存在這個瀏覽器中。完成後按<b>匯出 CSV</b>，CSV 會顯示在文字框讓你複製。<b>儲存進度</b>會給你一段 JSON 文字；<b>載入進度</b>把它貼回來即可。',
   help6:'按鍵：<kbd>1</kbd>–<kbd>5</kbd> 為亮起的列評分（三步相同）· <kbd>Enter</kbd> 當前步驟完成後進入下一步 · <kbd>↑</kbd> <kbd>↓</kbd> 移動 · <kbd>n</kbd> 下一例 · <kbd>p</kbd> 上一例 · <kbd>Esc</kbd> 離開備註欄。',
   gotIt:'知道了',syncPending:'☁ 儲存中…',syncLoading:'☁ 讀取雲端進度…',syncOk:d=>`☁ 已同步 ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`,syncOkTitle:'你的進度以評分者代碼存在雲端，換電腦輸入同一代碼即可繼續。',syncErr:'☁ 尚未同步',syncRestored:n=>`☁ 已從雲端還原 ${n} 例進度`,syncNew:'☁ 已同步（新評分者）',syncSlow:'☁ 雲端回應較慢，先以本機進度開始，背景繼續同步…',codeHintCloud:'每評一題進度就會以此代碼存到雲端；換電腦時輸入同一代碼即可從上次停的地方繼續。',allDone:'所有病例都已完成。請匯出 CSV。',caseOf:(i,n)=>`第 ${i} / ${n} 例`,casesDoneText:(d,n)=>`${d} / ${n} 例已完成`,
   loginIntro:'三個 AI 系統各自以遠距問診的方式訪談同一位模擬病人，並產生排序鑑別診斷。你將針對 100 個病例，評斷它們前 3 名候選診斷與 ground truth（正確診斷）有多接近。',
   instrTitle:'作答方式',
-  instrSteps:['<b>第一步：比對名稱。</b>病例先隱藏。左側是 <b>ground truth</b>，右側是三個 AI 系統的候選診斷合併成的一份清單。對每一項打 <b>1–5 分：與 ground truth 有多接近</b>。可用數字鍵，亮框會自動往下移。','<b>第二步：閱讀病例。</b>按<b>展開病例</b>。同一份清單再出現；這次對每一項打 <b>1–5 分：HPI 有多支持它</b>（1 矛盾 … 5 明確支持）。只對照病史。','<b>第三步：評 ground truth。</b>根據這份 HPI，ground truth 這個診斷適合嗎（1–5）？備註選填。','<b>評分原則。</b>看臨床概念，不看用詞或 ICD 編碼：同義詞、人名病、口語說法視為同一診斷；「未明示」、初次／後續就診等修飾語不影響。左右側錯誤、有無併發症、急性／慢性<b>要</b>扣分。每一項獨立評分，並在所有病例中保持一致。','<b>儲存。</b>每答一題就自動以你的評分者代碼存到雲端；換電腦輸入同一代碼即可接續。<b>儲存進度</b>可手動立即儲存；<b>匯出 CSV</b> 非必要。'],
+  instrSteps:['<b>第一步：比對兩邊診斷名稱是否接近。</b>左側是 <b>ground truth</b>，右側是三個 AI 系統的候選診斷合併成的一份清單。對每一項打 <b>1–5 分：與 ground truth 有多接近</b>。可用數字鍵，亮框會自動往下移。','<b>第二步：評估 AI 產出的鑑別診斷適確性。</b>從病歷（HPI）的資訊，是否可以合理推測左側的診斷。這次對每一項打 <b>1–5 分：HPI 有多支持它</b>（1 矛盾 … 5 明確支持）。','<b>第三步：評估 ground truth 的合適度。</b>根據這份 HPI，ground truth 這個診斷適合嗎（1–5）？備註選填。','<b>評分原則。</b>主要從診斷的語意以及定義判斷；每一項獨立評分，並在所有病例中保持一致。','<b>儲存。</b>每答一題就自動以你的評分者代碼存到雲端；換電腦輸入同一代碼即可接續。<b>儲存進度</b>可手動立即儲存；<b>匯出 CSV</b> 非必要。'],
   scaleTitle:'1–5 分的定義',
   exTitle:'範例',
-  exIntro:'第一步「與 ground truth 的接近度」示範——這是虛構範例，不是本研究的題目。',
+  exIntro:'以一個虛構範例（不是本研究的題目）示範三個步驟的評分。',
+  exHpiLabel:'HPI（摘要）',exFitLabel:'根據這份 HPI，ground truth 這個診斷適合嗎？',
+  exSteps:['第一步：與 ground truth 的接近度','第二步：HPI 對每個候選診斷的支持度','第三步：ground truth 與 HPI 的合適度'],
+  exHPI:'22 歲男性，臍周疼痛 18 小時後轉移至右下腹，噁心、嘔吐一次，低度發燒，咳嗽與走路時疼痛加劇。無腹瀉、無咳嗽、無泌尿道症狀；自昨日起食慾不振。',
   exGT:'急性闌尾炎 (Acute appendicitis)',
   exRows:[['急性闌尾炎 (Acute appendicitis)',5,'同一個診斷。'],['闌尾炎，未明示 (Appendicitis, unspecified)',4,'同一臨床實體，只是講得較廣——處置基本相同。'],['急性闌尾炎併穿孔 (Acute appendicitis with perforation)',3,'器官與病程對了，但多了併發症——臨床表現與檢查都會改變，不算「非常接近」。'],['腸繫膜淋巴腺炎 (Mesenteric lymphadenitis)',2,'同一區域、表現上合理的替代診斷，但是不同的疾病。'],['社區型肺炎 (Community-acquired pneumonia)',1,'與 ground truth 無關。']],
+  exRows2:[['急性闌尾炎 (Acute appendicitis)',5,'轉移性右下腹痛、食慾不振、低燒——任何醫師都會列入鑑別。'],['闌尾炎，未明示 (Appendicitis, unspecified)',5,'同樣的病史特徵同樣支持它。'],['急性闌尾炎併穿孔 (Acute appendicitis with perforation)',3,'相容，但才 18 小時且無腹膜炎或敗血症徵象——缺關鍵特徵。'],['腸繫膜淋巴腺炎 (Mesenteric lymphadenitis)',3,'年輕人右下腹痛的可能模仿者，但無先前病毒感染或腹瀉。'],['社區型肺炎 (Community-acquired pneumonia)',1,'無咳嗽或呼吸道症狀——病史不支持。']],
+  exFit:[5,'這份 HPI 是 ground truth 的典型表現——題目本身沒有問題。'],
   startTitle:'開始',
   codeLabel:'你的評分者代碼',codeHint:'只能用 A–Z、0–9、- 與 _，最多 16 個字元。',signIn:'進入',
   errCodeFormat:'評分者代碼只能用 A–Z、0–9、- 與 _，長度 1–16。',raterWho:c=>`評分者：${c}`,
@@ -541,7 +559,13 @@ function renderLoginUI(){$('loginTitle').textContent=t('title');$('loginIntro').
  $('instrTitle').textContent=t('instrTitle');$('instrSteps').innerHTML=t('instrSteps').map((x,i)=>`<li><span class="num">${i+1}</span><span>${x}</span></li>`).join('');
  $('scaleTitle').textContent=t('scaleTitle');$('loginLegend').innerHTML=legendHTML().replace(/<b>.*?<\/b>/,'');
  $('exTitle').textContent=t('exTitle');$('exIntro').textContent=t('exIntro');
- $('exBox').innerHTML=`<div class="exgt">${esc(t('gtLabel'))}: <b>${esc(t('exGT'))}</b></div>`+t('exRows').map(([dx,v,why])=>`<div class="exrow"><div class="exdx">${esc(dx)}</div><div class="chips">${[1,2,3,4,5].map(n=>`<span class="${n===v?'on s'+n:''}">${n}</span>`).join('')}</div><div class="exwhy">${esc(why)}</div></div>`).join('');$('codeLabel').textContent=t('codeLabel');$('codeHint').textContent=t('codeHint');$('codeHint2').textContent=SYNC_URL?t('codeHintCloud'):'';$('loginBtn').textContent=t('signIn');
+ const chips=(v,cls)=>`<div class="chips">${[1,2,3,4,5].map(n=>`<span class="${n===v?'on s'+n+(cls?' '+cls:''):''}">${n}</span>`).join('')}</div>`;
+ const rowsHtml=(rows,cls)=>rows.map(([dx,v,why])=>`<div class="exrow"><div class="exdx">${esc(dx)}</div>${chips(v,cls)}<div class="exwhy">${esc(why)}</div></div>`).join('');
+ const st=t('exSteps'),fit=t('exFit');
+ $('exBox').innerHTML=`<div class="exgt">${esc(t('gtLabel'))}: <b>${esc(t('exGT'))}</b></div>`
+  +`<div class="exstep">${esc(st[0])}</div>`+rowsHtml(t('exRows'))
+  +`<div class="exstep">${esc(st[1])}</div><div class="exhpi"><b>${esc(t('exHpiLabel'))}</b> ${esc(t('exHPI'))}</div>`+rowsHtml(t('exRows2'),'sup')
+  +`<div class="exstep">${esc(st[2])}</div><div class="exrow exfit"><div class="exdx">${esc(t('exFitLabel'))}<br><b>${esc(t('exGT'))}</b></div>${chips(fit[0],'fit')}<div class="exwhy">${esc(fit[1])}</div></div>`;$('codeLabel').textContent=t('codeLabel');$('codeHint').textContent=t('codeHint');$('codeHint2').textContent=SYNC_URL?t('codeHintCloud'):'';$('loginBtn').textContent=t('signIn');
  $('loginLangEn').setAttribute('aria-pressed',LANG==='en');$('loginLangZh').setAttribute('aria-pressed',LANG==='zh');document.title=t('title');}
 function setLang(l){LANG=l;try{localStorage.setItem('ddx150:lang',l);}catch(e){}applyTheme();renderLoginUI();if(BOOTED){renderStaticUI();render();}}
 function setScore(k,v){const c=CASES[ci],r=Object.assign({},rec(c));touched.add(c.study_id);if(r[k]===v)delete r[k];else r[k]=v;state.c[c.study_id]=r;save();const R=rows(),idx=R.findIndex(x=>x.k===k);if(r[k]!=null&&idx===active&&active<R.length-1)active=idx+1;else if(idx>=0)active=idx;renderRate();}
