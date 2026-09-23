@@ -179,6 +179,11 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
 .login{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px}
 .loginbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px 26px 26px;max-width:820px;width:100%}
 .loginbox h2{font-size:14.5px;margin:22px 0 8px;font-weight:700;color:var(--ink)}
+.loginbox .gloss{margin:0;display:grid;gap:6px}
+.loginbox .gloss div{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:baseline;font-size:14px;line-height:1.5}
+.loginbox .gloss dt{font-weight:700;color:var(--accent)}
+.loginbox .gloss dd{margin:0;color:var(--ink)}
+@media(max-width:560px){.loginbox .gloss div{grid-template-columns:1fr;gap:0}}
 .loginbox .steps{margin:0;padding:0;list-style:none;display:grid;gap:8px}
 .loginbox .steps li{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;font-size:14px;color:var(--ink);line-height:1.5}
 .loginbox .steps .num{width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
@@ -241,6 +246,8 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
     <button class="primary" id="loginBtn">Enter</button>
     <div id="loginMsg" class="msg"></div>
     </div>
+    <h2 id="glossTitle"></h2>
+    <dl class="gloss" id="gloss"></dl>
     <h2 id="instrTitle"></h2>
     <ol class="steps" id="instrSteps"></ol>
     <h2 id="scaleTitle"></h2>
@@ -346,7 +353,7 @@ const UI = {
   apQ:'How <b>APPROPRIATE</b> was the DDx?',apSub:'Compared with the differential you would expect for this presentation.',
   coQ:'How <b>COMPREHENSIVE</b> was the DDx?',coSub:'Compared with the differential you would expect for this presentation.',
   cmtPlaceholder:'comment on this case (optional)',groupTitle:['Group 1','Group 2','Group 3'],
-  groupQ:'',none:'',title:'Protégé 100 DDx Rating v7.1',legendTitle:'For every candidate, rate how close it is to the ground truth:',legendSub:'Then, for each group as a whole, rate how <b>appropriate</b> its three candidates are for this HPI (1–5).',colHead:['Unrelated','Somewhat related','Related','Very close','Exact / same'],apQ:'How APPROPRIATE is this group’s differential for this HPI?',apSub:'Judge the three candidates as a set against the differential you would expect from this history — independent of whether they hit the ground truth.',apScale:['Very inappropriate','Inappropriate','Neither','Appropriate','Very appropriate'],
+  groupQ:'',none:'',title:'Protégé 100 DDx Rating v7.1',legendTitle:'For every candidate diagnosis produced by the AI doctors, rate how close it is to the ground truth:',legendSub:'Then, for each group as a whole, rate how <b>appropriate</b> its three candidates are for this HPI (1–5).',colHead:['Unrelated','Somewhat related','Related','Very close','Exact / same'],apQ:'How APPROPRIATE is this group’s differential for this HPI?',apSub:'Judge the three candidates as a set against the differential you would expect from this history — independent of whether they hit the ground truth.',apScale:['Very inappropriate','Inappropriate','Neither','Appropriate','Very appropriate'],
   helpTitle:'How to use this',
   help1:'Three different AI systems each interviewed the same simulated patient and produced a ranked differential. The right-hand panel shows the <b>top 3</b> from each system as Group 1, 2 and 3. Which system is which group is randomised per case and known only to the study lead — do not try to guess it.',
   help2:'Each case has three steps. <b>Step 1</b>: compare the diagnosis names — score every candidate diagnosis (duplicates across the three systems merged) from <b>1 to 5</b> for how close it is to the ground truth. <b>Step 2</b>: judge the AI differentials against the case — from the history (HPI), can each candidate be reasonably inferred? Score each from <b>1 to 5</b> for how well the <b>HPI supports it</b>. <b>Step 3</b>: judge the ground truth — given this HPI, how fitting is the ground-truth diagnosis (1–5)? Number keys answer the highlighted row; the highlight advances by itself.',
@@ -358,6 +365,7 @@ const UI = {
   help6:'Keys: <kbd>1</kbd>–<kbd>5</kbd> score the highlighted row (all steps) · <kbd>Enter</kbd> go to the next step when the current one is done · <kbd>↑</kbd> <kbd>↓</kbd> move · <kbd>n</kbd> next case · <kbd>p</kbd> previous · <kbd>Esc</kbd> leave the comment box.',
   gotIt:'got it',syncPending:'☁ saving…',syncLoading:'☁ loading your progress…',syncOk:d=>`☁ synced ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`,syncOkTitle:'Your progress is stored in the cloud under your rater code. You can continue on any computer.',syncErr:'☁ not synced yet',syncRestored:n=>`☁ restored ${n} case${n>1?'s':''} from the cloud`,syncNew:'☁ synced (new rater)',syncSlow:'☁ cloud is slow — started with local progress, still syncing…',codeHintCloud:'<span class="remember">Be sure to remember the code you enter here.</span> Your progress is saved to the cloud under this code after every answer — use the same code on any computer to continue where you left off.',allDone:'Every case is done. Please export the CSV.',caseOf:(i,n)=>`case ${i} / ${n}`,casesDoneText:(d,n)=>`${d} / ${n} cases done`,
   loginIntro:'AI diagnosis rating system',
+  glossTitle:'Key terms',gloss:[['GT','Ground truth — the diagnosis recorded in the medical chart.'],['HPI','History of present illness — the record of this visit.'],['Candidate Ddx','All the possible diagnoses produced by the AI doctors.']],
   instrTitle:'How it works',
   instrSteps:['<b>Step 1 — Compare the diagnosis names.</b> Left: the <b>ground truth</b> (GT, the diagnosis recorded in the chart). Right: the candidate diagnoses from three AI systems, merged into one list. Rate each candidate <b>1–5 for how close it is to the ground truth</b>. Number keys work; the highlight moves down by itself.','<b>Step 2 — Judge the AI differentials against the case.</b> From the information in the history (HPI), can the diagnosis on the left be reasonably inferred? Rate each candidate <b>1–5 for how well the HPI supports it</b> (1 contradicted … 5 clearly supported).','<b>Step 3 — Judge the ground truth.</b> Given this HPI, how fitting is the ground-truth diagnosis (1–5)? Comment optional.','<b>Rules.</b> Judge mainly by the meaning and definition of the diagnosis; score every item on its own and stay consistent across cases.','<b>Saving.</b> Every answer is saved automatically to the cloud under your rater code — use the same code on any computer to continue where you left off. <b>Save progress</b> forces a save; <b>Export CSV</b> is optional.','<b>Finding unfinished cases.</b> Click “<b>X / 100 cases done</b>” in the top bar to list every unfinished case number; click a number to jump there. <b>First unfinished</b> also works.'],
   scaleTitle:'The 1–5 scale',
@@ -397,7 +405,7 @@ const UI = {
   rankSub:'符合你剛剛所選程度中，排名最高的項目。按鍵 <kbd>1</kbd>–<kbd>9</kbd>，<kbd>0</kbd> 代表第 10 名。',cantSay:'無法判斷',
   apQ:'這份 DDx 有多<b>適當</b>？',apSub:'與你預期此病例應有的鑑別診斷相比。',coQ:'這份 DDx 有多<b>完整</b>？',coSub:'與你預期此病例應有的鑑別診斷相比。',
   cmtPlaceholder:'針對此病例的備註（選填）',groupTitle:['第一組','第二組','第三組'],
-  groupQ:'',none:'',title:'Protégé 100 DDx 評分 v7.1',helpTitle:'使用說明',legendTitle:'請為每一個候選診斷評分：它與 ground truth 有多接近？',legendSub:'接著針對每一組整體，評分這三個候選診斷對這份 HPI 有多<b>適當</b>（1–5）。',colHead:['無關','略有相關','相關','非常接近','完全符合'],apQ:'這一組的鑑別診斷對這份 HPI 有多適當？',apSub:'把三個候選診斷當成一組，與你依這份病史預期的鑑別診斷相比——不論它們有沒有命中 ground truth。',apScale:['非常不適當','不適當','中性','適當','非常適當'],
+  groupQ:'',none:'',title:'Protégé 100 DDx 評分 v7.1',helpTitle:'使用說明',legendTitle:'請為每一個 AI doctor 所產生的候選診斷評分：它與 ground truth 有多接近？',legendSub:'接著針對每一組整體，評分這三個候選診斷對這份 HPI 有多<b>適當</b>（1–5）。',colHead:['無關','略有相關','相關','非常接近','完全符合'],apQ:'這一組的鑑別診斷對這份 HPI 有多適當？',apSub:'把三個候選診斷當成一組，與你依這份病史預期的鑑別診斷相比——不論它們有沒有命中 ground truth。',apScale:['非常不適當','不適當','中性','適當','非常適當'],
   help1:'三個不同的 AI 系統各自問診了同一位模擬病人，並產生排序鑑別診斷。右側顯示每個系統的<b>前 3 名</b>，分別標為第一、二、三組。哪一組對應哪個系統在每個病例中隨機分配，只有計畫主持人知道——請不要嘗試猜測。',
   help2:'每個病例分三步。<b>第一步</b>：比對兩邊診斷名稱是否接近——對每個候選診斷（三個系統合併、重複者只列一次）給 <b>1 到 5</b> 分，代表與 ground truth 的接近度。<b>第二步</b>：評估 AI 產出的鑑別診斷適確性——從病歷（HPI）的資訊，是否可以合理推測該診斷？給 <b>1 到 5</b> 分，代表 <b>HPI 有多支持它</b>。<b>第三步</b>：評估 ground truth 的合適度——根據這份 HPI，ground truth 這個診斷適合嗎（1–5）？數字鍵作答亮起的那一列，亮框會自動前進。',
   help3a:'<b>5 完全符合</b>——同一個臨床診斷。<b>4 非常接近</b>——同一個臨床實體，只是講得較廣或較具體，處置基本相同。<b>3 相關</b>——器官與病程對了，但有臨床上有意義的差異（左右側、併發症、急性／慢性、不同次分型），會改變臨床判斷或檢查方向。',
@@ -408,6 +416,7 @@ const UI = {
   help6:'按鍵：<kbd>1</kbd>–<kbd>5</kbd> 為亮起的列評分（三步相同）· <kbd>Enter</kbd> 當前步驟完成後進入下一步 · <kbd>↑</kbd> <kbd>↓</kbd> 移動 · <kbd>n</kbd> 下一例 · <kbd>p</kbd> 上一例 · <kbd>Esc</kbd> 離開備註欄。',
   gotIt:'知道了',syncPending:'☁ 儲存中…',syncLoading:'☁ 讀取雲端進度…',syncOk:d=>`☁ 已同步 ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`,syncOkTitle:'你的進度以評分者代碼存在雲端，換電腦輸入同一代碼即可繼續。',syncErr:'☁ 尚未同步',syncRestored:n=>`☁ 已從雲端還原 ${n} 例進度`,syncNew:'☁ 已同步（新評分者）',syncSlow:'☁ 雲端回應較慢，先以本機進度開始，背景繼續同步…',codeHintCloud:'<span class="remember">一定要記住自己一開始輸入的代碼！</span>每評一題進度就會以此代碼存到雲端；換電腦時輸入同一代碼即可從上次停的地方繼續。',allDone:'所有病例都已完成。請匯出 CSV。',caseOf:(i,n)=>`第 ${i} / ${n} 例`,casesDoneText:(d,n)=>`${d} / ${n} 例已完成`,
   loginIntro:'AI 診斷評分系統',
+  glossTitle:'關鍵字',gloss:[['GT','Ground truth，表示根據病歷記載的診斷。'],['HPI','History of present illness，表示病患這次就診的紀錄。'],['候選診斷 Ddx','AI doctor 所產生的全部可能診斷。']],
   instrTitle:'作答方式',
   instrSteps:['<b>第一步：比對兩邊診斷名稱是否接近。</b>左側是 <b>ground truth</b>（GT，病歷中給的診斷），右側是三個 AI 系統的候選診斷合併成的一份清單。對每一項打 <b>1–5 分：與 ground truth 有多接近</b>。可用數字鍵，亮框會自動往下移。','<b>第二步：評估 AI 產出的鑑別診斷適確性。</b>從病歷（HPI）的資訊，是否可以合理推測左側的診斷。這次對每一項打 <b>1–5 分：HPI 有多支持它</b>（1 矛盾 … 5 明確支持）。','<b>第三步：評估 ground truth 的合適度。</b>根據這份 HPI，ground truth 這個診斷適合嗎（1–5）？備註選填。','<b>評分原則。</b>主要從診斷的語意以及定義判斷；每一項獨立評分，並在所有病例中保持一致。','<b>儲存。</b>每答一題就自動以你的評分者代碼存到雲端；換電腦輸入同一代碼即可接續。<b>儲存進度</b>可手動立即儲存；<b>匯出 CSV</b> 非必要。','<b>找未完成的題目。</b>點上方的「<b>X / 100 例已完成</b>」，會列出所有尚未完成的題號，點題號即可跳過去；也可按「<b>第一個未完成</b>」。'],
   scaleTitle:'1–5 分的定義',
@@ -560,7 +569,7 @@ function renderStaticUI(){document.title=t('title');$('mainTitle').textContent=t
  document.querySelector('.tabs button[data-tab=note]').textContent=t('noteTab');document.querySelector('.tabs button[data-tab=persona]').textContent=t('personaTab');document.querySelector('.tabs button[data-tab=transcript]').textContent=t('transcriptTab');
  ['helpTitle','help1','help2','help3a','help3b','help3d','help4','help5','help6','gotIt'].forEach(k=>$(k).innerHTML=t(k));$('raterPill').innerHTML='<span class="rlab">'+esc(t('raterWho')(''))+'</span>'+esc(RATER);}
 function renderLoginUI(){$('loginTitle').textContent=t('title');$('loginIntro').textContent=t('loginIntro');
- $('instrTitle').textContent=t('instrTitle');$('instrSteps').innerHTML=t('instrSteps').map((x,i)=>`<li><span class="num">${i+1}</span><span>${x}</span></li>`).join('');
+ $('glossTitle').textContent=t('glossTitle');$('gloss').innerHTML=t('gloss').map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');$('instrTitle').textContent=t('instrTitle');$('instrSteps').innerHTML=t('instrSteps').map((x,i)=>`<li><span class="num">${i+1}</span><span>${x}</span></li>`).join('');
  $('scaleTitle').textContent=t('scaleTitle');$('loginLegend').innerHTML=legendHTML().replace(/<b>.*?<\/b>/,'');
  $('exTitle').textContent=t('exTitle');$('exIntro').textContent=t('exIntro');
  const chips=(v,cls)=>`<div class="chips">${[1,2,3,4,5].map(n=>`<span class="${n===v?'on s'+n+(cls?' '+cls:''):''}">${n}</span>`).join('')}</div>`;
