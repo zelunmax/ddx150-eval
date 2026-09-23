@@ -340,31 +340,41 @@ const rejected=()=>Object.keys(POOL).filter(id=>allShown().has(id)&&(state.c[id]
 const runDecided=()=>CASES.every(c=>decOf(c));
 function chapterCounts(ids){const m={};ids.forEach(id=>{const c=POOL[id].chapter;m[c]=(m[c]||0)+1;});return m;}
 function planNextRun(){
- const acc=accepted(), shown=allShown(), Q=META.quotas100, need=META.target-acc.length;
+ const acc=accepted(), rej=rejected(), shown=allShown(), Q=META.quotas100, need=META.target-acc.length;
  if(need<=0) return {ids:[],reason:'full'};
- const usedGT=new Set([...shown].map(id=>nk(POOL[id].gt)));
+ /* GT-name rule: never repeat a GT that is accepted, or rejected because the GT itself was unreasonable.
+    A GT freed by an HPI-based rejection may be reused (the diagnosis is fine; the case text was not). */
+ const gtCount={}; acc.forEach(id=>{const g=nk(POOL[id].gt);gtCount[g]=(gtCount[g]||0)+1;});
+ const gtBlocked=new Set(rej.filter(id=>(state.c[id]||{}).reason==='gt').map(id=>nk(POOL[id].gt)));
  const accCount=chapterCounts(acc); let sym=acc.filter(id=>POOL[id].gt_type==='symptom_dx').length;
- const picked=[]; const elig=id=>!shown.has(id)&&!picked.includes(id)&&!usedGT.has(nk(POOL[id].gt));
- const T1=META.tier1_backup, T2=META.tier2;
- function pick(list){
+ const picked=[];
+ const base=id=>!shown.has(id)&&!picked.includes(id)&&!gtBlocked.has(nk(POOL[id].gt));
+ const strict=id=>base(id)&&!gtCount[nk(POOL[id].gt)];
+ const relaxed=id=>base(id)&&(gtCount[nk(POOL[id].gt)]||0)<2;   /* last resort inside a deficit chapter: allow a GT twice */
+ const T1=META.tier1_backup, T2=META.tier2, ALL=T1.concat(T2);
+ function pick(){
   const chs=Object.keys(Q).sort((a,b)=>((Q[b]-(accCount[b]||0))-(Q[a]-(accCount[a]||0))));
-  const needSym=sym<META.symptom_target;
-  for(const c of chs){ if((Q[c]-(accCount[c]||0))<=0)break; const x=list.find(id=>POOL[id].chapter===c&&elig(id)&&(needSym?POOL[id].gt_type==='symptom_dx':POOL[id].gt_type==='disease_dx')); if(x)return x; }
-  for(const c of chs){ if((Q[c]-(accCount[c]||0))<=0)break; const x=list.find(id=>POOL[id].chapter===c&&elig(id)); if(x)return x; }
-  let x=list.find(id=>elig(id)&&(needSym?POOL[id].gt_type==='symptom_dx':true)); if(x)return x;
-  return list.find(elig)||null; }
- let src='tier1';
- for(let k=0;k<need;k++){ let x=pick(T1); if(!x){x=pick(T2); if(x) src='tier2';} if(!x) break; picked.push(x); usedGT.add(nk(POOL[x].gt)); accCount[POOL[x].chapter]=(accCount[POOL[x].chapter]||0)+1; if(POOL[x].gt_type==='symptom_dx')sym++; }
- return {ids:picked,need,src,reason:picked.length<need?'exhausted':'ok'}; }
+  const needSym=sym<META.symptom_target, typeOK=id=>needSym?POOL[id].gt_type==='symptom_dx':POOL[id].gt_type==='disease_dx';
+  for(const c of chs){ if((Q[c]-(accCount[c]||0))<=0)break; const x=ALL.find(id=>POOL[id].chapter===c&&strict(id)&&typeOK(id)); if(x)return x; }
+  for(const c of chs){ if((Q[c]-(accCount[c]||0))<=0)break; const x=ALL.find(id=>POOL[id].chapter===c&&strict(id)); if(x)return x; }
+  for(const c of chs){ if((Q[c]-(accCount[c]||0))<=0)break; const x=ALL.find(id=>POOL[id].chapter===c&&relaxed(id)); if(x)return x; }
+  let x=ALL.find(id=>strict(id)&&typeOK(id)); if(x)return x;
+  return ALL.find(strict)||null; }
+ let tiers=new Set();
+ for(let k=0;k<need;k++){ const x=pick(); if(!x) break; picked.push(x); tiers.add(POOL[x].tier); const g=nk(POOL[x].gt); gtCount[g]=(gtCount[g]||0)+1; accCount[POOL[x].chapter]=(accCount[POOL[x].chapter]||0)+1; if(POOL[x].gt_type==='symptom_dx')sym++; }
+ const src=tiers.size===2?'mixed':tiers.has(2)?'tier2':'tier1';
+ const byCh={}; picked.forEach(id=>{const c=POOL[id].chapter;byCh[c]=(byCh[c]||0)+1;});
+ return {ids:picked,need,src,byCh,reason:picked.length<need?'exhausted':'ok'}; }
+async function startNextRun(){ if(!runDecided()){const left=CASES.filter(c=>!decOf(c)).length;await uiAlert(t('selDecideAll')+' ('+left+')');const i=CASES.findIndex(c=>!decOf(c));if(i>=0)go(i);return;}
+ const plan=planNextRun(); if(plan.reason==='full'){await uiAlert(t('selFull'));return;}
+ if(!plan.ids.length){await uiAlert(t('selExhausted'));return;}
+ const byCh=Object.keys(plan.byCh).map(c=>c+' '+plan.byCh[c]).join(', ');
+ if(!(await uiConfirm(t('selConfirmNext')(plan.ids.length,plan.need,plan.src)+'\n'+t('selByCh')+' '+byCh)))return;
+ runs().push({n:runs().length+1,ids:plan.ids,src:plan.src,ts:Date.now()}); save(); setRun(runs().length-1); renderRunSelect(); go(0); }
 function uiAsk(msg,withCancel){return new Promise(res=>{const d=$('ask');$('askMsg').textContent=msg;$('askCancel').hidden=!withCancel;$('askOk').textContent=t('askOk');$('askCancel').textContent=t('askCancel');
  const done=v=>{d.removeEventListener('close',onClose);try{d.close();}catch(e){}res(v);};const onClose=()=>done(false);
  $('askOk').onclick=()=>done(true);$('askCancel').onclick=()=>done(false);d.addEventListener('close',onClose);try{d.showModal();}catch(e){res(withCancel?window.confirm(msg):(window.alert(msg),true));}});}
 const uiAlert=m=>uiAsk(m,false), uiConfirm=m=>uiAsk(m,true);
-async function startNextRun(){ if(!runDecided()){const left=CASES.filter(c=>!decOf(c)).length;await uiAlert(t('selDecideAll')+' ('+left+')');const i=CASES.findIndex(c=>!decOf(c));if(i>=0)go(i);return;}
- const plan=planNextRun(); if(plan.reason==='full'){await uiAlert(t('selFull'));return;}
- if(!plan.ids.length){await uiAlert(t('selExhausted'));return;}
- if(!(await uiConfirm(t('selConfirmNext')(plan.ids.length,plan.need,plan.src))))return;
- runs().push({n:runs().length+1,ids:plan.ids,src:plan.src,ts:Date.now()}); save(); setRun(runs().length-1); renderRunSelect(); go(0); }
 function renderRunSelect(){ const sel=$('runSel'); sel.innerHTML=runs().map((r,i)=>`<option value="${i}">${esc(t('runLabel')(r.n,r.ids.length))}</option>`).join(''); sel.value=String(RUNI); }
 function exportSelection(){
  const rows=[['study_id','run','decision','reason','note','chapter','gt_type','gt_primary_dx','gt_icd','condition','hpi_sufficiency','hpi_focus','tier','gt_fit_1to5','rater']];
@@ -407,8 +417,8 @@ const UI = {
   selAccept:'Accept',selReject:'Reject',selReasonNone:'reason (optional)',selReasons:{hpi:'HPI insufficient',gt:'GT unreasonable',other:'other'},selNotePh:'note (optional)',
   selNext:'Start next run →',selExport:'Export selection',runLabel:(n,k)=>`Run ${n} (${k} cases)`,runWord:'run',
   selDecideAll:'Please decide ✓ / ✗ for every case in this run first — cases still undecided:',askOk:'OK',askCancel:'Cancel',selFull:'Target reached — 100 cases accepted. Export the selection.',selExhausted:'Backup pool exhausted — no eligible replacement left. Export what you have.',
-  selConfirmNext:(k,n,src)=>`Start the next run with ${k} replacement case${k>1?'s':''} (${n} needed, drawn from ${src==='tier2'?'tier 2 = audited pool outside the 150':'tier 1 = the 50 leftover from the 150'})?`,
-  selExportTitle:'Selection export',selExportIntro:'Copy everything below and save it as a .txt / paste to Claude. It contains a JSON summary and a CSV of every decision.',
+  selConfirmNext:(k,n,src)=>`Start the next run with ${k} replacement case${k>1?'s':''} (${n} needed; source: ${src==='tier2'?'tier 2 = audited pool outside the 150':src==='mixed'?'tier 1 where available, tier 2 for chapters with no tier-1 backup':'tier 1 = the 50 leftover from the 150'}). Chapters with the largest shortfall vs the 989 quota are filled first.`,
+  selByCh:'By chapter:',selExportTitle:'Selection export',selExportIntro:'Copy everything below and save it as a .txt / paste to Claude. It contains a JSON summary and a CSV of every decision.',
   selStatus:(a,tgt,d,m,dz,sy)=>`accepted ${a}/${tgt} (disease ${dz} · symptom ${sy}) · run ${d}/${m}`,
   caseMeta:(c)=>`<b>${c.chapter}</b> · ${c.gt_type==='symptom_dx'?'symptom':'disease'} · HPI ${c.suff}+${c.focus} · tier ${c.tier}`,caseOf:(i,n)=>`case ${i} / ${n}`,casesDoneText:(d,n)=>`${d} / ${n} cases done`,
   loginIntro:'Three AI systems each interviewed the same simulated patient by telehealth and produced a ranked differential diagnosis. You will judge how close their top-3 candidates come to the ground-truth diagnosis, for 150 cases.',
@@ -459,8 +469,8 @@ const UI = {
   selAccept:'收',selReject:'不收',selReasonNone:'原因（選填）',selReasons:{hpi:'HPI 資訊不足',gt:'GT 不合理',other:'其他'},selNotePh:'備註（選填）',
   selNext:'開始下一輪 →',selExport:'匯出挑選結果',runLabel:(n,k)=>`第 ${n} 輪（${k} 例）`,runWord:'輪次',
   selDecideAll:'請先對本輪每一例都按 ✓ 或 ✗。尚未決定的例數：',askOk:'確定',askCancel:'取消',selFull:'已達 100 例，請匯出挑選結果。',selExhausted:'備用池已用完，沒有符合條件的替補。請匯出目前結果。',
-  selConfirmNext:(k,n,src)=>`開始下一輪：補入 ${k} 例（需要 ${n} 例，來源：${src==='tier2'?'第二層＝150 例以外通過審核的備用池':'第一層＝150 例中未入選的 50 例'}）？`,
-  selExportTitle:'匯出挑選結果',selExportIntro:'複製下方全部內容存成 .txt，或直接貼給 Claude。內含 JSON 摘要與每一例決定的 CSV。',
+  selConfirmNext:(k,n,src)=>`開始下一輪：補入 ${k} 例（需要 ${n} 例；來源：${src==='tier2'?'第二層＝150 例以外通過審核的備用池':src==='mixed'?'有第一層備用的章節用第一層，沒有的章節用第二層':'第一層＝150 例中未入選的 50 例'}）。補位順序：距離 989 配額缺口最大的章節優先。`,
+  selByCh:'各章節補入：',selExportTitle:'匯出挑選結果',selExportIntro:'複製下方全部內容存成 .txt，或直接貼給 Claude。內含 JSON 摘要與每一例決定的 CSV。',
   selStatus:(a,tgt,d,m,dz,sy)=>`已收 ${a}/${tgt}（疾病 ${dz} · 症狀 ${sy}）· 本輪 ${d}/${m}`,
   caseMeta:(c)=>`<b>${c.chapter}</b> · ${c.gt_type==='symptom_dx'?'症狀':'疾病'} · HPI ${c.suff}+${c.focus} · 第 ${c.tier} 層`,caseOf:(i,n)=>`第 ${i} / ${n} 例`,casesDoneText:(d,n)=>`${d} / ${n} 例已完成`,
   loginIntro:'三個 AI 系統各自以遠距問診的方式訪談同一位模擬病人，並產生排序鑑別診斷。你將針對 150 個病例，評斷它們前 3 名候選診斷與 ground truth（正確診斷）有多接近。',
