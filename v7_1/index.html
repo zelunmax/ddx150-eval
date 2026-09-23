@@ -261,7 +261,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   <span class="pill" id="sync" title=""></span>
   <span class="pill" id="raterPill"></span>
   <button id="homeBtn" title="">⌂ home</button>
-  <button id="helpBtn">? help</button>
+  <button id="helpBtn" hidden>? help</button>
   <button id="savefile">save progress</button>
   <button id="loadBtn" hidden>load progress</button>
   <button class="primary" id="export">export CSV</button>
@@ -325,7 +325,7 @@ const PACK = DATA.pack, CASES = DATA.cases;
 let KEY='', state={c:{}}, ci=0, active=0, LANG='en', RATER='', BOOTED=false;
 const UI = {
  en:{prev:'← prev',next:'next →',goto:'go to',firstUnfinished:'first unfinished',complete:'complete',incomplete:'incomplete',saved:'saved',savedNow:'✓ saved',
-  home:'⌂ Home',homeTitle:'Back to the entry / instructions page (progress is saved)',help:'? help',saveProgress:'save progress',loadProgress:'load progress',export:'export CSV',theCase:'The case',ddxTitle:'AI ranked differentials — three systems, top 3 each',
+  home:'Rules & instructions',homeTitle:'Back to the entry page with the rating rules (progress is saved)',help:'? help',saveProgress:'save progress',loadProgress:'load progress',export:'export CSV',theCase:'The case',ddxTitle:'AI ranked differentials — three systems, top 3 each',
   step1:'Step 1 · Match names',step1sub:'Score each candidate against the ground truth. The case text stays hidden.',step2:'Step 2 · Read the case',
   lockedTitle:'The case opens in step 2',lockedSub:'First score how close each candidate diagnosis is to the ground truth — names only, no clinical context yet.',
   nextStep:'All candidates scored. Open the case and continue to step 2.',pendingN:n=>`${n} candidate${n>1?'s':''} still unscored — scroll the list to find ${n>1?'them':'it'}.`,openCase:'Open the case →',backStep:'← back to step 1 (name matching)',
@@ -377,7 +377,7 @@ const UI = {
   confirmDiffPack:(f,t)=>`This progress is from "${f}", not "${t}". Loading it will replace the ratings stored here. Continue?`,
   gtType:{disease_dx:'disease diagnosis',symptom_dx:'symptom-level diagnosis'}},
  zh:{prev:'← 上一例',next:'下一例 →',goto:'跳至',firstUnfinished:'第一個未完成',complete:'已完成',incomplete:'未完成',saved:'已儲存',savedNow:'✓ 已手動儲存',
-  home:'⌂ 入口頁',homeTitle:'回到入口說明頁（進度已儲存）',help:'？說明',saveProgress:'儲存進度',loadProgress:'載入進度',export:'匯出 CSV',theCase:'病例',ddxTitle:'AI 排序鑑別診斷——三個系統，各取前 3 名',
+  home:'規則說明',homeTitle:'回到入口頁查看規則說明（進度已儲存）',help:'？說明',saveProgress:'儲存進度',loadProgress:'載入進度',export:'匯出 CSV',theCase:'病例',ddxTitle:'AI 排序鑑別診斷——三個系統，各取前 3 名',
   step1:'第一步 · 比對名稱',step1sub:'只看診斷名稱，評每個候選與 ground truth 的接近度；病例文本先隱藏。',step2:'第二步 · 閱讀病例',
   lockedTitle:'病例文本在第二步才會顯示',lockedSub:'請先評每個候選診斷與 ground truth 的接近度——只比對名稱，暫時不看臨床脈絡。',
   nextStep:'所有候選診斷都已評分。展開病例，進入第二步。',pendingN:n=>`還有 ${n} 個候選診斷未評分——請捲動清單找到它。`,openCase:'展開病例 →',backStep:'← 回到第一步（名稱比對）',
