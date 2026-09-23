@@ -90,7 +90,9 @@ ol.ddx li.hit{background:var(--hit);font-weight:650;border-radius:4px;padding-le
 .stepbar .step{flex:1;text-align:left;border-radius:9px;padding:5px 10px;font-size:12px;line-height:1.25;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 .stepbar .step b{display:block;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase}
 .stepbar .step[aria-current=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
-.stepbar .step.done{border-color:var(--good)}
+.stepbar .step.done{border-color:var(--good);background:var(--hit);color:var(--ink)}
+.stepbar .step.done b{color:var(--good)}
+.stepbar .step.done[aria-current=true]{background:var(--hit);box-shadow:inset 0 0 0 2px var(--accent);border-color:var(--accent)}
 .stepbar .step.done b::after{content:' ✓';color:var(--good)}
 .locked{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:260px;padding:30px 20px;text-align:center;color:var(--muted)}
 .locked .lk-ic{font-size:30px}.locked .lk-t{font-weight:650;color:var(--ink);font-size:15px}.locked .lk-s{font-size:13px;max-width:380px;line-height:1.5}
