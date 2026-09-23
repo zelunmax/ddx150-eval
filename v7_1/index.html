@@ -4,9 +4,7 @@
 :root{--bg:#f6f7f9;--panel:#fff;--ink:#1a1d21;--muted:#6b7280;--line:#e3e6ea;
 --accent:#1d4ed8;--accent-soft:#eef3ff;--good:#047857;--warn:#b45309;--err:#b91c1c;
 --gt-bg:#f0fdf4;--gt-line:#bbf7d0;--ddx-bg:#fefce8;--ddx-line:#fde68a;--hit:#dcfce7;--sys:#f3f4f6;--kbd:#eef1f5;--pt:#9333ea;--doc-bg:#fcfdff}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111418;--panel:#1a1f26;--ink:#e7eaee;--muted:#9aa3ae;--line:#2a313a;
---accent:#6d9cff;--accent-soft:#1c2a45;--good:#34d399;--warn:#fbbf24;--err:#f87171;
---gt-bg:#0f2a1c;--gt-line:#1f5c3a;--ddx-bg:#2a2410;--ddx-line:#5c4a1a;--hit:#14532d;--sys:#222831;--kbd:#222831;--pt:#c084fc;--doc-bg:#171c22}}
+
 :root[data-theme="dark"]{--bg:#111418;--panel:#1a1f26;--ink:#e7eaee;--muted:#9aa3ae;--line:#2a313a;
 --accent:#6d9cff;--accent-soft:#1c2a45;--good:#34d399;--warn:#fbbf24;--err:#f87171;
 --gt-bg:#0f2a1c;--gt-line:#1f5c3a;--ddx-bg:#2a2410;--ddx-line:#5c4a1a;--hit:#14532d;--sys:#222831;--kbd:#222831;--pt:#c084fc;--doc-bg:#171c22}
@@ -218,7 +216,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
       <button id="loginLangEn" aria-pressed="true">English</button>
       <button id="loginLangZh" aria-pressed="false">中文</button>
       <span class="grow"></span>
-      <button id="loginThemeBtn" class="themebtn" title="Background: auto / light / dark"></button>
+      <button id="loginThemeBtn" class="themebtn" title="Background: light / dark"></button>
     </div>
     <h1 id="loginTitle">Protégé 100 DDx Rating</h1>
     <p id="loginIntro"></p>
@@ -255,13 +253,13 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   <span class="pill" id="raterPill"></span>
   <button id="helpBtn">? help</button>
   <button id="savefile">save progress</button>
-  <button id="loadBtn">load progress</button>
+  <button id="loadBtn" hidden>load progress</button>
   <button class="primary" id="export">export CSV</button>
 </header>
 <div class="langbar" role="group" aria-label="Language">
   <button id="langEn" aria-pressed="true">English</button>
   <button id="langZh" aria-pressed="false">中文</button>
-  <button id="themeBtn" class="themebtn" title="Background: auto / light / dark"></button>
+  <button id="themeBtn" class="themebtn" title="Background: light / dark"></button>
   <div class="stepbar"><button class="step" id="stepA" data-step="1"></button><button class="step" id="stepB" data-step="2"></button><button class="step" id="stepC" data-step="3"></button></div>
   <button id="prev">← prev</button>
   <span class="pill" id="where"></span>
@@ -316,7 +314,7 @@ const L=(c,k)=>{if(LANG==='zh'){const z=DATA_ZH[c.study_id];if(z&&z[k]!=null)ret
 const PACK = DATA.pack, CASES = DATA.cases;
 let KEY='', state={c:{}}, ci=0, active=0, LANG='en', RATER='', BOOTED=false;
 const UI = {
- en:{prev:'← prev',next:'next →',goto:'go to',firstUnfinished:'first unfinished',complete:'complete',incomplete:'incomplete',saved:'saved',
+ en:{prev:'← prev',next:'next →',goto:'go to',firstUnfinished:'first unfinished',complete:'complete',incomplete:'incomplete',saved:'saved',savedNow:'✓ saved',
   help:'? help',saveProgress:'save progress',loadProgress:'load progress',export:'export CSV',theCase:'The case',ddxTitle:'AI ranked differentials — three systems, top 3 each',
   step1:'Step 1 · Match names',step1sub:'Score each candidate against the ground truth. The case text stays hidden.',step2:'Step 2 · Read the case',
   lockedTitle:'The case opens in step 2',lockedSub:'First score how close each candidate diagnosis is to the ground truth — names only, no clinical context yet.',
@@ -363,7 +361,7 @@ const UI = {
   copied:'Copied.',copyFail:'Could not copy — select the text and copy it manually.',loaded:'Progress loaded.',badFile:'That is not a progress text from this tool.',
   confirmDiffPack:(f,t)=>`This progress is from "${f}", not "${t}". Loading it will replace the ratings stored here. Continue?`,
   gtType:{disease_dx:'disease diagnosis',symptom_dx:'symptom-level diagnosis'}},
- zh:{prev:'← 上一例',next:'下一例 →',goto:'跳至',firstUnfinished:'第一個未完成',complete:'已完成',incomplete:'未完成',saved:'已儲存',
+ zh:{prev:'← 上一例',next:'下一例 →',goto:'跳至',firstUnfinished:'第一個未完成',complete:'已完成',incomplete:'未完成',saved:'已儲存',savedNow:'✓ 已手動儲存',
   help:'？說明',saveProgress:'儲存進度',loadProgress:'載入進度',export:'匯出 CSV',theCase:'病例',ddxTitle:'AI 排序鑑別診斷——三個系統，各取前 3 名',
   step1:'第一步 · 比對名稱',step1sub:'只看診斷名稱，評每個候選與 ground truth 的接近度；病例文本先隱藏。',step2:'第二步 · 閱讀病例',
   lockedTitle:'病例文本在第二步才會顯示',lockedSub:'請先評每個候選診斷與 ground truth 的接近度——只比對名稱，暫時不看臨床脈絡。',
@@ -434,10 +432,10 @@ function caseComplete(c){return step1Done(c)&&step2Done(c)&&step3Done(c);}
 const nDone=()=>CASES.filter(caseComplete).length;
 function resetCols(){document.querySelectorAll('.col-right,#ddxGroups .items').forEach(r=>{r.scrollTop=0;});}
 /* background theme: auto (follow system) / light / dark */
-const THEMES=['auto','light','dark'];let THEME='auto';try{THEME=localStorage.getItem('ddx150:theme')||'auto';}catch(e){}
-if(!THEMES.includes(THEME))THEME='auto';
-function applyTheme(){const root=document.documentElement;if(THEME==='auto')root.removeAttribute('data-theme');else root.setAttribute('data-theme',THEME);
- const lab={auto:{en:'🌓 Auto',zh:'🌓 自動'},light:{en:'☀️ Light',zh:'☀️ 淺色'},dark:{en:'🌙 Dark',zh:'🌙 深色'}}[THEME];
+const THEMES=['light','dark'];let THEME='light';try{THEME=localStorage.getItem('ddx150:theme')||'light';}catch(e){}
+if(!THEMES.includes(THEME))THEME='light';
+function applyTheme(){const root=document.documentElement;root.setAttribute('data-theme',THEME);
+ const lab={light:{en:'☀️ Light',zh:'☀️ 淺色'},dark:{en:'🌙 Dark',zh:'🌙 深色'}}[THEME];
  ['themeBtn','loginThemeBtn'].forEach(id=>{const b=$(id);if(b)b.textContent=lab[typeof LANG==='string'?LANG:'en']||lab.en;});}
 function cycleTheme(){THEME=THEMES[(THEMES.indexOf(THEME)+1)%THEMES.length];try{localStorage.setItem('ddx150:theme',THEME);}catch(e){}applyTheme();}
 applyTheme();
@@ -578,7 +576,7 @@ function exportCSV(){const header=['case_no','gt_type','condition','gt_primary_d
  openIO(t('ioExport'),t('ioExportIntro'),csv(out),false);}
 function openIO(title,intro,text,loadMode){$('ioTitle').textContent=title;$('ioIntro').textContent=intro;$('ioText').value=text;$('ioText').readOnly=!loadMode;$('ioApply').hidden=!loadMode;$('ioMsg').textContent='';$('ioMsg').className='msg';$('io').showModal();if(loadMode)$('ioText').focus();}
 $('export').onclick=exportCSV;
-$('savefile').onclick=()=>openIO(t('ioSave'),t('ioSaveIntro'),JSON.stringify({pack:PACK,rater:RATER,...state}),false);
+$('savefile').onclick=async()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}if(SYNC_URL){clearTimeout(syncTimer);syncTimer=null;setSync('busy',t('syncPending'));await pushSync();}const el=$('saved');el.textContent=t('savedNow');clearTimeout(save._t);save._t=setTimeout(()=>{el.textContent='';},2500);};
 $('loadBtn').onclick=()=>openIO(t('ioLoad'),t('ioLoadIntro'),'',true);
 $('ioClose').onclick=()=>$('io').close();
 $('ioCopy').onclick=async()=>{const ta=$('ioText');try{await navigator.clipboard.writeText(ta.value);$('ioMsg').textContent=t('copied');$('ioMsg').className='msg done';}catch(e){ta.select();$('ioMsg').textContent=t('copyFail');$('ioMsg').className='msg err';}};
