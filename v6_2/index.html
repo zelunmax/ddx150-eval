@@ -54,6 +54,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;pad
 .decbtn{font-size:17px;font-weight:800;width:40px;height:34px;padding:0!important;border-radius:9px;line-height:1}
 .decbtn.acc[aria-pressed=true]{background:var(--good);border-color:var(--good);color:#fff}
 .decbtn.rej[aria-pressed=true]{background:var(--err);border-color:var(--err);color:#fff}
+.langbar #nextRun:not(.ready){opacity:.55}
 .decsel{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}
 .decnote{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);width:150px}
 #caseMeta b{color:var(--ink)}
@@ -308,6 +309,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
   <p id="help4"></p><p id="help5"></p><p id="help6"></p>
   <form method="dialog"><button class="primary" id="gotIt">got it</button></form>
 </div></dialog>
+<dialog id="ask"><div class="bd"><p id="askMsg" style="font-size:15px;line-height:1.6;white-space:pre-wrap;margin:0 0 14px"></p><div class="rowbtns"><button class="primary" id="askOk">OK</button><button id="askCancel">Cancel</button></div></div></dialog>
 <dialog id="io"><div class="bd">
   <h3 id="ioTitle"></h3>
   <p id="ioIntro" class="pill" style="white-space:normal"></p>
@@ -354,10 +356,14 @@ function planNextRun(){
  let src='tier1';
  for(let k=0;k<need;k++){ let x=pick(T1); if(!x){x=pick(T2); if(x) src='tier2';} if(!x) break; picked.push(x); usedGT.add(nk(POOL[x].gt)); accCount[POOL[x].chapter]=(accCount[POOL[x].chapter]||0)+1; if(POOL[x].gt_type==='symptom_dx')sym++; }
  return {ids:picked,need,src,reason:picked.length<need?'exhausted':'ok'}; }
-function startNextRun(){ if(!runDecided()){alert(t('selDecideAll'));return;}
- const plan=planNextRun(); if(plan.reason==='full'){alert(t('selFull'));return;}
- if(!plan.ids.length){alert(t('selExhausted'));return;}
- if(!confirm(t('selConfirmNext')(plan.ids.length,plan.need,plan.src)))return;
+function uiAsk(msg,withCancel){return new Promise(res=>{const d=$('ask');$('askMsg').textContent=msg;$('askCancel').hidden=!withCancel;$('askOk').textContent=t('askOk');$('askCancel').textContent=t('askCancel');
+ const done=v=>{d.removeEventListener('close',onClose);try{d.close();}catch(e){}res(v);};const onClose=()=>done(false);
+ $('askOk').onclick=()=>done(true);$('askCancel').onclick=()=>done(false);d.addEventListener('close',onClose);try{d.showModal();}catch(e){res(withCancel?window.confirm(msg):(window.alert(msg),true));}});}
+const uiAlert=m=>uiAsk(m,false), uiConfirm=m=>uiAsk(m,true);
+async function startNextRun(){ if(!runDecided()){const left=CASES.filter(c=>!decOf(c)).length;await uiAlert(t('selDecideAll')+' ('+left+')');const i=CASES.findIndex(c=>!decOf(c));if(i>=0)go(i);return;}
+ const plan=planNextRun(); if(plan.reason==='full'){await uiAlert(t('selFull'));return;}
+ if(!plan.ids.length){await uiAlert(t('selExhausted'));return;}
+ if(!(await uiConfirm(t('selConfirmNext')(plan.ids.length,plan.need,plan.src))))return;
  runs().push({n:runs().length+1,ids:plan.ids,src:plan.src,ts:Date.now()}); save(); setRun(runs().length-1); renderRunSelect(); go(0); }
 function renderRunSelect(){ const sel=$('runSel'); sel.innerHTML=runs().map((r,i)=>`<option value="${i}">${esc(t('runLabel')(r.n,r.ids.length))}</option>`).join(''); sel.value=String(RUNI); }
 function exportSelection(){
@@ -400,7 +406,7 @@ const UI = {
   gotIt:'got it',allDone:'Every case in this run has been decided.',
   selAccept:'Accept',selReject:'Reject',selReasonNone:'reason (optional)',selReasons:{hpi:'HPI insufficient',gt:'GT unreasonable',other:'other'},selNotePh:'note (optional)',
   selNext:'Start next run →',selExport:'Export selection',runLabel:(n,k)=>`Run ${n} (${k} cases)`,runWord:'run',
-  selDecideAll:'Please decide ✓ / ✗ for every case in this run first.',selFull:'Target reached — 100 cases accepted. Export the selection.',selExhausted:'Backup pool exhausted — no eligible replacement left. Export what you have.',
+  selDecideAll:'Please decide ✓ / ✗ for every case in this run first — cases still undecided:',askOk:'OK',askCancel:'Cancel',selFull:'Target reached — 100 cases accepted. Export the selection.',selExhausted:'Backup pool exhausted — no eligible replacement left. Export what you have.',
   selConfirmNext:(k,n,src)=>`Start the next run with ${k} replacement case${k>1?'s':''} (${n} needed, drawn from ${src==='tier2'?'tier 2 = audited pool outside the 150':'tier 1 = the 50 leftover from the 150'})?`,
   selExportTitle:'Selection export',selExportIntro:'Copy everything below and save it as a .txt / paste to Claude. It contains a JSON summary and a CSV of every decision.',
   selStatus:(a,tgt,d,m,dz,sy)=>`accepted ${a}/${tgt} (disease ${dz} · symptom ${sy}) · run ${d}/${m}`,
@@ -452,7 +458,7 @@ const UI = {
   gotIt:'知道了',allDone:'本輪病例都已決定。',
   selAccept:'收',selReject:'不收',selReasonNone:'原因（選填）',selReasons:{hpi:'HPI 資訊不足',gt:'GT 不合理',other:'其他'},selNotePh:'備註（選填）',
   selNext:'開始下一輪 →',selExport:'匯出挑選結果',runLabel:(n,k)=>`第 ${n} 輪（${k} 例）`,runWord:'輪次',
-  selDecideAll:'請先對本輪每一例都按 ✓ 或 ✗。',selFull:'已達 100 例，請匯出挑選結果。',selExhausted:'備用池已用完，沒有符合條件的替補。請匯出目前結果。',
+  selDecideAll:'請先對本輪每一例都按 ✓ 或 ✗。尚未決定的例數：',askOk:'確定',askCancel:'取消',selFull:'已達 100 例，請匯出挑選結果。',selExhausted:'備用池已用完，沒有符合條件的替補。請匯出目前結果。',
   selConfirmNext:(k,n,src)=>`開始下一輪：補入 ${k} 例（需要 ${n} 例，來源：${src==='tier2'?'第二層＝150 例以外通過審核的備用池':'第一層＝150 例中未入選的 50 例'}）？`,
   selExportTitle:'匯出挑選結果',selExportIntro:'複製下方全部內容存成 .txt，或直接貼給 Claude。內含 JSON 摘要與每一例決定的 CSV。',
   selStatus:(a,tgt,d,m,dz,sy)=>`已收 ${a}/${tgt}（疾病 ${dz} · 症狀 ${sy}）· 本輪 ${d}/${m}`,
@@ -564,7 +570,7 @@ function renderDec(){const c=CASES[ci];if(!c)return;const r=rec(c);
  $('decAccept').setAttribute('aria-pressed',r.dec==='accept');$('decReject').setAttribute('aria-pressed',r.dec==='reject');
  $('decReason').value=r.reason||'';$('decNote').value=r.dnote||'';$('caseMeta').innerHTML=t('caseMeta')(c);
  const st=$('cstate');st.textContent=r.dec==='accept'?'✓ '+t('selAccept'):r.dec==='reject'?'✗ '+t('selReject'):t('incomplete');st.className='pill '+(r.dec==='accept'?'done':r.dec==='reject'?'todo':'');
- $('nextRun').disabled=!runDecided()||RUNI!==runs().length-1;}
+ $('nextRun').disabled=RUNI!==runs().length-1;$('nextRun').classList.toggle('ready',runDecided());}
 function setDec(v){const c=CASES[ci],r=Object.assign({},rec(c));const was=r.dec;if(r.dec===v)delete r.dec;else r.dec=v;r.drun=runs()[RUNI].n;state.c[c.study_id]=r;save();renderRate();
  if(v==='accept'&&was!=='accept'&&ci<CASES.length-1)go(ci+1);}
 function renderStaticUI(){$('decAccept').title=t('selAccept');$('decReject').title=t('selReject');$('decNote').placeholder=t('selNotePh');$('nextRun').textContent=t('selNext');$('exportSel').textContent=t('selExport');$('runLabelTxt').textContent=t('runWord');
@@ -603,7 +609,7 @@ document.addEventListener('keydown',ev=>{if(!BOOTED)return;if(ev.target.tagName=
 function go(i){if(i<0||i>=CASES.length)return;ci=i;STEP=curStep(CASES[ci]);active=0;{const R=rows();const j=R.findIndex(x=>!(rec(CASES[ci])[x.k]>=1));active=j<0?0:j;}render();window.scrollTo(0,0);resetCols();try{localStorage.setItem(KEY+':ci',String(ci));}catch(e){}}
 $('next').onclick=()=>go(ci+1);$('prev').onclick=()=>go(ci-1);
 $('jump').onchange=e=>{const v=+e.target.value;if(v>=1&&v<=CASES.length)go(v-1);};
-$('firstTodo').onclick=()=>{const i=CASES.findIndex(c=>!caseComplete(c));if(i<0)alert(t('allDone'));else go(i);};
+$('firstTodo').onclick=()=>{const i=CASES.findIndex(c=>!caseComplete(c));if(i<0)uiAlert(t('allDone'));else go(i);};
 $('helpBtn').onclick=()=>$('help').showModal();
 $('themeBtn').onclick=cycleTheme;$('loginThemeBtn').onclick=cycleTheme;$('langEn').onclick=()=>setLang('en');$('langZh').onclick=()=>setLang('zh');$('loginLangEn').onclick=()=>setLang('en');$('loginLangZh').onclick=()=>setLang('zh');
 let unfinishedOpen=false;
