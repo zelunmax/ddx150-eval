@@ -260,7 +260,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
     <h2 id="exTitle"></h2>
     <p id="exIntro"></p>
     <div class="exbox" id="exBox"></div>
-    <div class="buildtag" id="buildTag">build v7.1.23</div>
+    <div class="buildtag" id="buildTag">build v7.1.24</div>
   </div>
 </div>
 
@@ -614,7 +614,7 @@ $('next').onclick=()=>go(ci+1);$('prev').onclick=()=>go(ci-1);
 $('jump').onchange=e=>{const v=+e.target.value;if(v>=1&&v<=CASES.length)go(v-1);};
 $('firstTodo').onclick=()=>{const i=CASES.findIndex(c=>!caseComplete(c));if(i<0)alert(t('allDone'));else go(i);};
 $('helpBtn').onclick=()=>$('help').showModal();
-$('homeBtn').onclick=async()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}if(SYNC_URL&&syncDirty){clearTimeout(syncTimer);syncTimer=null;try{await pushSync();}catch(e){}}BOOTED=false;setUnfinishedPanel(false);$('app').hidden=true;$('login').hidden=false;$('rc').value=RATER;$('loginMsg').textContent='';$('loginMsg').className='msg';renderLoginUI();window.scrollTo(0,0);};
+$('homeBtn').onclick=async()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}if(SYNC_URL&&syncDirty){clearTimeout(syncTimer);syncTimer=null;try{await pushSync();}catch(e){}}BOOTED=false;setUnfinishedPanel(false);$('app').hidden=true;$('login').hidden=false;$('rc').value='';$('loginMsg').textContent='';$('loginMsg').className='msg';renderLoginUI();window.scrollTo(0,0);};
 $('themeBtn').onclick=cycleTheme;$('loginThemeBtn').onclick=cycleTheme;$('langEn').onclick=()=>setLang('en');$('langZh').onclick=()=>setLang('zh');$('loginLangEn').onclick=()=>setLang('en');$('loginLangZh').onclick=()=>setLang('zh');
 let unfinishedOpen=false;
 function setUnfinishedPanel(open){unfinishedOpen=open;$('unfinishedPanel').hidden=!open;$('todoTag').setAttribute('aria-expanded',String(open));if(!open)return;
@@ -635,11 +635,11 @@ $('ioCopy').onclick=async()=>{const ta=$('ioText');try{await navigator.clipboard
 $('ioApply').onclick=()=>{try{const s=JSON.parse($('ioText').value);if(!s.c)throw 0;if(s.pack&&s.pack!==PACK&&!confirm(t('confirmDiffPack')(s.pack,PACK)))return;state={c:s.c,m:s.m||Date.now()};save();render();$('ioMsg').textContent=t('loaded');$('ioMsg').className='msg done';}catch(e){$('ioMsg').textContent=t('badFile');$('ioMsg').className='msg err';}};
 const RATER_RE=/^[A-Z0-9_-]{1,16}$/;
 function doLogin(){const el=$('rc'),code=el.value.trim().toUpperCase();el.value=code;if(!RATER_RE.test(code)){$('loginMsg').textContent=t('errCodeFormat');$('loginMsg').className='msg err';el.focus();return;}$('loginBtn').disabled=true;boot(code).catch(e=>{$('loginMsg').textContent='Error: '+(e&&e.message||e);$('loginMsg').className='msg err';console.error(e);}).finally(()=>{$('loginBtn').disabled=false;});}
-async function boot(code){RATER=code;KEY='ddx150:'+PACK+':'+RATER;state=load();try{localStorage.setItem('ddx150:lastRater',code);}catch(e){}
+async function boot(code){RATER=code;KEY='ddx150:'+PACK+':'+RATER;state=load();
  BOOTED=true; if(SYNC_URL)pullSync();$('login').hidden=true;$('app').hidden=false;renderStaticUI();let start=0;try{start=+localStorage.getItem(KEY+':ci')||0;}catch(e){}go(Math.min(start,CASES.length-1));
  if(boot._obs)return;boot._obs=true;const setH=()=>{const h=$('stickyTop').getBoundingClientRect().height;document.documentElement.style.setProperty('--sticky-h',(h+149)+'px');document.documentElement.style.setProperty('--hdr-h',h+'px');};requestAnimationFrame(setH);window.addEventListener('resize',setH);if(window.ResizeObserver){new ResizeObserver(setH).observe($('stickyTop'));}}
 $('loginBtn').onclick=doLogin;$('rc').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();doLogin();}});
-try{const l=localStorage.getItem('ddx150:lang');if(l==='zh')LANG='zh';const last=localStorage.getItem('ddx150:lastRater');if(last)$('rc').value=last;}catch(e){}
+try{const l=localStorage.getItem('ddx150:lang');if(l==='zh')LANG='zh';}catch(e){}
 applyTheme();
 renderLoginUI();$('rc').focus();
 </script>
