@@ -260,7 +260,7 @@ kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;b
     <h2 id="exTitle"></h2>
     <p id="exIntro"></p>
     <div class="exbox" id="exBox"></div>
-    <div class="buildtag" id="buildTag">build v7.1.24</div>
+    <div class="buildtag" id="buildTag">build v7.1.25</div>
   </div>
 </div>
 
@@ -481,11 +481,11 @@ function cycleTheme(){THEME=THEMES[(THEMES.indexOf(THEME)+1)%THEMES.length];try{
 applyTheme();
 /* ---------- cloud sync (Google Apps Script web app) ---------- */
 const SYNC_URL='https://script.google.com/macros/s/AKfycbwdU4fmi_qcUCjWiBj6wbtJeh05Awzyj_FgJ9tpdH-MZpast3NR_t_OHMBd5qePYls3XA/exec';
-let syncTimer=null, syncBusy=false, syncDirty=false; const touched=new Set();
+let syncTimer=null, syncBusy=false, syncDirty=false, pulled=false; const touched=new Set();
 function setSync(cls,txt,title){const el=$('sync');if(!el)return;el.className='pill '+cls;el.textContent=(cls==='busy')?'':txt;el.title=title||'';}
 const nComplete=()=>CASES.filter(caseComplete).length;
 function scheduleSync(){if(!SYNC_URL||!BOOTED)return;syncDirty=true;clearTimeout(syncTimer);syncTimer=setTimeout(pushSync,900);setSync('busy',t('syncPending'));}
-async function pushSync(){if(!SYNC_URL||!BOOTED||syncBusy)return;syncBusy=true;syncDirty=false;
+async function pushSync(){if(!SYNC_URL||!BOOTED||syncBusy)return;if(!pulled){syncDirty=true;return;} /* never overwrite the cloud before we have read it */syncBusy=true;syncDirty=false;
  try{const body=JSON.stringify({action:'save',rater:RATER,pack:PACK,m:state.m||Date.now(),n_complete:nComplete(),state:{c:state.c,m:state.m}});
   const m0=state.m||Date.now();
   const res=await fetch(SYNC_URL,{method:'POST',body,headers:{'Content-Type':'text/plain;charset=utf-8'},redirect:'follow'});
@@ -506,17 +506,19 @@ function mergeRemote(j){const localN=Object.keys(state.c||{}).length,remoteM=Num
  try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
  if(localN&&localM>remoteM)scheduleSync();}
 /* pull with a hard time budget: never keep the rater waiting more than ~6 s; keep trying in the background and merge when it arrives */
-async function pullSync(){if(!SYNC_URL)return;
- const url=SYNC_URL+'?action=load&rater='+encodeURIComponent(RATER)+'&pack='+encodeURIComponent(PACK)+'&_='+Date.now();
- for(let attempt=0;attempt<3;attempt++){
-  try{const res=await fetchT(url+'&a='+attempt,{redirect:'follow'},30000);const j=await res.json();if(!j.ok)throw new Error(j.error||'server');
-   if(j.found&&j.state&&j.state.c){mergeRemote(j);if(BOOTED){render();if(!touched.size){const k=CASES.findIndex(c=>!caseComplete(c));if(k>=0&&k!==ci)go(k);}}setSync('ok',t('syncOk')(new Date()),t('syncOkTitle'));}
-   else{setSync('ok',t('syncOk')(new Date()),t('syncOkTitle'));if(Object.keys(state.c||{}).length)scheduleSync();}
+async function pullSync(){if(!SYNC_URL)return;const who=RATER;
+ for(let attempt=0;;attempt++){
+  if(RATER!==who)return false;
+  const url=SYNC_URL+'?action=load&rater='+encodeURIComponent(RATER)+'&pack='+encodeURIComponent(PACK)+'&_='+Date.now()+'&a='+attempt;
+  try{const res=await fetchT(url,{redirect:'follow'},30000);const j=await res.json();if(!j.ok)throw new Error(j.error||'server');
+   if(RATER!==who)return false;
+   if(j.found&&j.state&&j.state.c){mergeRemote(j);if(BOOTED){render();if(!touched.size){const k=CASES.findIndex(c=>!caseComplete(c));if(k>=0&&k!==ci)go(k);}}}
+   pulled=true;setSync('ok',t('syncOk')(new Date()),t('syncOkTitle'));
+   if(syncDirty||Object.keys(state.c||{}).length&&!(j.found))scheduleSync();
    return true;
-  }catch(e){setSync('err',t('syncErr'),String(e&&e.message||e));await new Promise(r=>setTimeout(r,4000));}}
- return false;}
+  }catch(e){if(attempt>=1)setSync('err',t('syncErr'),String(e&&e.message||e));await new Promise(r=>setTimeout(r,Math.min(30000,3000*(attempt+1))));}}}
 window.addEventListener('online',()=>{if(syncDirty)pushSync();});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&syncDirty&&SYNC_URL&&BOOTED){try{navigator.sendBeacon(SYNC_URL,new Blob([JSON.stringify({action:'save',rater:RATER,pack:PACK,m:state.m||Date.now(),n_complete:nComplete(),state:{c:state.c,m:state.m}})],{type:'text/plain;charset=utf-8'}));}catch(e){}}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&syncDirty&&SYNC_URL&&BOOTED&&pulled){try{navigator.sendBeacon(SYNC_URL,new Blob([JSON.stringify({action:'save',rater:RATER,pack:PACK,m:state.m||Date.now(),n_complete:nComplete(),state:{c:state.c,m:state.m}})],{type:'text/plain;charset=utf-8'}));}catch(e){}}});
 let STEP=1;
 function curStep(c){const r=rec(c);if(r.step)return r.step;if(!step1Done(c))return 1;if(!step2Done(c))return 2;return 3;}
 function rows(){const c=CASES[ci];if(STEP===1)return uniq(c).map(u=>({k:mkey(u.k),u}));if(STEP===2)return uniq(c).map(u=>({k:hkey(u.k),u}));return [{k:'fit'}];}
@@ -636,7 +638,7 @@ $('ioApply').onclick=()=>{try{const s=JSON.parse($('ioText').value);if(!s.c)thro
 const RATER_RE=/^[A-Z0-9_-]{1,16}$/;
 function doLogin(){const el=$('rc'),code=el.value.trim().toUpperCase();el.value=code;if(!RATER_RE.test(code)){$('loginMsg').textContent=t('errCodeFormat');$('loginMsg').className='msg err';el.focus();return;}$('loginBtn').disabled=true;boot(code).catch(e=>{$('loginMsg').textContent='Error: '+(e&&e.message||e);$('loginMsg').className='msg err';console.error(e);}).finally(()=>{$('loginBtn').disabled=false;});}
 async function boot(code){RATER=code;KEY='ddx150:'+PACK+':'+RATER;state=load();
- BOOTED=true; if(SYNC_URL)pullSync();$('login').hidden=true;$('app').hidden=false;renderStaticUI();let start=0;try{start=+localStorage.getItem(KEY+':ci')||0;}catch(e){}go(Math.min(start,CASES.length-1));
+ BOOTED=true; pulled=false; if(SYNC_URL)pullSync();$('login').hidden=true;$('app').hidden=false;renderStaticUI();let start=0;try{start=+localStorage.getItem(KEY+':ci')||0;}catch(e){}go(Math.min(start,CASES.length-1));
  if(boot._obs)return;boot._obs=true;const setH=()=>{const h=$('stickyTop').getBoundingClientRect().height;document.documentElement.style.setProperty('--sticky-h',(h+149)+'px');document.documentElement.style.setProperty('--hdr-h',h+'px');};requestAnimationFrame(setH);window.addEventListener('resize',setH);if(window.ResizeObserver){new ResizeObserver(setH).observe($('stickyTop'));}}
 $('loginBtn').onclick=doLogin;$('rc').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();doLogin();}});
 try{const l=localStorage.getItem('ddx150:lang');if(l==='zh')LANG='zh';}catch(e){}
